@@ -1,3 +1,5 @@
+namespace BookshopMVC.Data;
+
 using Microsoft.EntityFrameworkCore;
 using BookshopMVC.Models;
 
