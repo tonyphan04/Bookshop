@@ -82,30 +82,4 @@ namespace BookshopMVC.DTOs
         /// </summary>
         public decimal TotalPrice { get; set; }
     }
-
-    /// <summary>
-    /// Shopping cart item DTO with current pricing and stock information.
-    /// Used for shopping cart functionality before order finalization.
-    /// Includes real-time stock information for inventory validation.
-    /// </summary>
-    public class CartItemDto
-    {
-        public int BookId { get; set; }
-        public string? BookTitle { get; set; }
-        public string? BookAuthor { get; set; }
-        public string? BookImageUrl { get; set; }
-        /// <summary>
-        /// Current book price (may differ from historical order prices)
-        /// </summary>
-        public decimal BookPrice { get; set; }
-        public int Quantity { get; set; }
-        /// <summary>
-        /// Total price for this cart item (BookPrice × Quantity)
-        /// </summary>
-        public decimal TotalPrice { get; set; }
-        /// <summary>
-        /// Current available stock for inventory validation
-        /// </summary>
-        public int AvailableStock { get; set; }
-    }
 }
