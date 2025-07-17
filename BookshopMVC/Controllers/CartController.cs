@@ -4,6 +4,7 @@ using BookshopMVC.DTOs;
 using BookshopMVC.Data;
 using BookshopMVC.Models;
 using Microsoft.AspNetCore.Authorization;
+using AutoMapper;
 
 namespace BookshopMVC.Controllers
 {
@@ -14,10 +15,12 @@ namespace BookshopMVC.Controllers
     public class CartController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public CartController(ApplicationDbContext context)
+        public CartController(ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         #region READ Operations
@@ -32,25 +35,15 @@ namespace BookshopMVC.Controllers
                     .Where(c => c.UserId == userId)
                     .Include(c => c.Book)
                     .ThenInclude(b => b.Genre)
-                    .Select(c => new CartItemDto
-                    {
-                        Id = c.Id,
-                        UserId = c.UserId,
-                        BookId = c.BookId,
-                        BookTitle = c.Book.Title,
-                        BookImageUrl = c.Book.ImageUrl,
-                        BookPrice = c.Book.Price,
-                        Quantity = c.Quantity,
-                        TotalPrice = c.Book.Price * c.Quantity,
-                        AddedDate = c.AddedDate,
-                        AvailableStock = c.Book.Stock
-                    })
                     .ToListAsync();
+
+                // 🎉 AutoMapper magic - replaces manual CartItemDto mapping!
+                var cartItemDtos = _mapper.Map<List<CartItemDto>>(cartItems);
 
                 var cartDto = new CartDto
                 {
                     UserId = userId,
-                    Items = cartItems,
+                    Items = cartItemDtos,
                     LastUpdated = DateTime.UtcNow
                 };
 

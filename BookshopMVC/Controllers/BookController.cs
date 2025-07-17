@@ -4,6 +4,7 @@ using BookshopMVC.DTOs;
 using BookshopMVC.Data;
 using BookshopMVC.Models;
 using Microsoft.AspNetCore.Authorization;
+using AutoMapper;
 
 namespace BookshopMVC.Controllers
 {
@@ -13,10 +14,12 @@ namespace BookshopMVC.Controllers
     public class BookController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public BookController(ApplicationDbContext context)
+        public BookController(ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         #region READ Operations
@@ -35,19 +38,8 @@ namespace BookshopMVC.Controllers
                     .OrderBy(b => b.Title)
                     .ToListAsync();
 
-                var bookSummaries = books.Select(book => new BookSummaryDto
-                {
-                    Id = book.Id,
-                    Title = book.Title,
-                    Price = book.Price,
-                    ImageUrl = book.ImageUrl,
-                    GenreName = book.Genre.Name,
-                    InStock = book.Stock > 0,
-                    Authors = book.AuthorBooks
-                        .OrderBy(ab => ab.AuthorOrder)
-                        .Select(ab => $"{ab.Author.FirstName} {ab.Author.LastName}")
-                        .ToList()
-                }).ToList();
+                // 🎉 AutoMapper magic - replaces 15+ lines of manual mapping!
+                var bookSummaries = _mapper.Map<List<BookSummaryDto>>(books);
 
                 return Ok(bookSummaries);
             }
@@ -74,25 +66,8 @@ namespace BookshopMVC.Controllers
                     return NotFound($"Book with ID {id} not found");
                 }
 
-                var bookDto = new BookDto
-                {
-                    Id = book.Id,
-                    Title = book.Title,
-                    ISBN13 = book.ISBN13,
-                    Price = book.Price,
-                    Stock = book.Stock,
-                    ImageUrl = book.ImageUrl,
-                    GenreId = book.GenreId,
-                    Publisher = book.Publisher ?? string.Empty,
-                    Language = book.Language,
-                    IsActive = book.IsActive,
-                    CreatedAt = book.CreatedDate,
-                    GenreName = book.Genre.Name,
-                    Authors = book.AuthorBooks
-                        .OrderBy(ab => ab.AuthorOrder)
-                        .Select(ab => $"{ab.Author.FirstName} {ab.Author.LastName}")
-                        .ToList()
-                };
+                // 🎉 AutoMapper magic - replaces 15+ lines of manual mapping!
+                var bookDto = _mapper.Map<BookDto>(book);
 
                 return Ok(bookDto);
             }
@@ -123,19 +98,8 @@ namespace BookshopMVC.Controllers
                     .OrderBy(b => b.Title)
                     .ToListAsync();
 
-                var bookSummaries = books.Select(book => new BookSummaryDto
-                {
-                    Id = book.Id,
-                    Title = book.Title,
-                    Price = book.Price,
-                    ImageUrl = book.ImageUrl,
-                    GenreName = book.Genre.Name,
-                    InStock = book.Stock > 0,
-                    Authors = book.AuthorBooks
-                        .OrderBy(ab => ab.AuthorOrder)
-                        .Select(ab => $"{ab.Author.FirstName} {ab.Author.LastName}")
-                        .ToList()
-                }).ToList();
+                // 🎉 AutoMapper magic - replaces manual mapping!
+                var bookSummaries = _mapper.Map<List<BookSummaryDto>>(books);
 
                 return Ok(bookSummaries);
             }
@@ -229,20 +193,8 @@ namespace BookshopMVC.Controllers
                     return BadRequest("One or more author IDs are invalid");
                 }
 
-                // Create book entity
-                var book = new Book
-                {
-                    Title = createBookDto.Title,
-                    ISBN13 = createBookDto.ISBN13,
-                    Price = createBookDto.Price,
-                    Stock = createBookDto.Stock,
-                    ImageUrl = createBookDto.ImageUrl,
-                    GenreId = createBookDto.GenreId,
-                    Publisher = createBookDto.Publisher,
-                    Language = createBookDto.Language,
-                    IsActive = createBookDto.IsActive,
-                    CreatedDate = DateTime.UtcNow
-                };
+                // 🎉 AutoMapper magic - replaces manual book creation!
+                var book = _mapper.Map<Book>(createBookDto);
 
                 _context.Books.Add(book);
                 await _context.SaveChangesAsync();

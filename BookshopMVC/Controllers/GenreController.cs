@@ -5,6 +5,8 @@ using BookshopMVC.Data;
 using BookshopMVC.Models;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.AspNetCore.Authorization;
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
 
 namespace BookshopMVC.Controllers
 {
@@ -14,10 +16,12 @@ namespace BookshopMVC.Controllers
     public class GenreController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public GenreController(ApplicationDbContext context)
+        public GenreController(ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         #region READ Operations
@@ -28,20 +32,17 @@ namespace BookshopMVC.Controllers
         {
             try
             {
-                // ✅ Query all genres and project to DTO in database query for efficiency
+                // Use AutoMapper with ProjectTo for efficient database projection
                 var genres = await _context.Genres
-                    .OrderBy(g => g.Name)  // Order alphabetically by name
-                    .Select(g => new GenreDto
-                    {
-                        Id = g.Id,                    // ✅ FIXED: Include Id (was missing)
-                        Name = g.Name,
-                        Description = g.Description,
-                        IsActive = g.IsActive,        // ✅ FIXED: Include IsActive (was missing)
-                        DisplayOrder = g.DisplayOrder,
-                        BookCount = g.Books.Count(),  // Count books in this genre
-                        Books = new List<BookSummaryDto>() // Empty for list view (performance)
-                    })
-                    .ToListAsync(); // Execute query once
+                    .OrderBy(g => g.Name)
+                    .ProjectTo<GenreDto>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
+
+                // For list view, we want empty books for performance
+                foreach (var genre in genres)
+                {
+                    genre.Books = new List<BookSummaryDto>();
+                }
 
                 return Ok(genres);
             }
@@ -57,9 +58,10 @@ namespace BookshopMVC.Controllers
         {
             try
             {
-                // ✅ Find genre by ID with related books included
+                // Find genre by ID with related books included
                 var genre = await _context.Genres
-                    .Include(g => g.Books)  // Include related books for detailed view
+                    .Include(g => g.Books)
+                    .ThenInclude(b => b.Genre)
                     .FirstOrDefaultAsync(g => g.Id == id);
 
                 if (genre == null)
@@ -67,24 +69,8 @@ namespace BookshopMVC.Controllers
                     return NotFound($"Genre with ID {id} not found.");
                 }
 
-                // ✅ FIXED: Complete DTO mapping with all properties
-                var genreDto = new GenreDto
-                {
-                    Id = genre.Id,
-                    Name = genre.Name,                    // ✅ FIXED: Was missing
-                    Description = genre.Description,      // ✅ FIXED: Was missing  
-                    IsActive = genre.IsActive,           // ✅ FIXED: Was missing
-                    DisplayOrder = genre.DisplayOrder,   // ✅ FIXED: Was missing
-                    BookCount = genre.Books?.Count ?? 0,                // ✅ Map books to summary DTOs for detailed view
-                    Books = genre.Books?.Select(b => new BookSummaryDto
-                    {
-                        Id = b.Id,
-                        Title = b.Title,
-                        Price = b.Price,
-                        GenreName = genre.Name,
-                        InStock = b.Stock > 0  // ✅ FIXED: Use correct property name 'Stock'
-                    }).ToList() ?? new List<BookSummaryDto>()
-                };
+                // Use AutoMapper to map to DTO
+                var genreDto = _mapper.Map<GenreDto>(genre);
 
                 return Ok(genreDto);
             }
@@ -107,26 +93,23 @@ namespace BookshopMVC.Controllers
 
                 var lowerQuery = query.ToLower();
 
-                // ✅ Search genres by name or description (handle null descriptions)
+                // Search genres by name or description with AutoMapper projection
                 var result = await _context.Genres
                     .Where(g => g.Name.ToLower().Contains(lowerQuery) ||
-                               (g.Description != null && g.Description.ToLower().Contains(lowerQuery))) // ✅ FIXED: Null check
+                               (g.Description != null && g.Description.ToLower().Contains(lowerQuery)))
                     .OrderBy(g => g.Name)
-                    .Select(g => new GenreDto
-                    {
-                        Id = g.Id,                    // ✅ FIXED: Include Id (was missing)
-                        Name = g.Name,                // ✅ FIXED: Include Name (was missing)
-                        Description = g.Description,
-                        IsActive = g.IsActive,        // ✅ FIXED: Include IsActive (was missing)
-                        DisplayOrder = g.DisplayOrder, // ✅ FIXED: Include DisplayOrder (was missing)
-                        BookCount = g.Books.Count(),
-                        Books = new List<BookSummaryDto>() // Empty for search performance
-                    })
+                    .ProjectTo<GenreDto>(_mapper.ConfigurationProvider)
                     .ToListAsync();
+
+                // For search results, we want empty books for performance
+                foreach (var genre in result)
+                {
+                    genre.Books = new List<BookSummaryDto>();
+                }
 
                 return Ok(result);
             }
-            catch (Exception ex) // ✅ FIXED: Consistent error handling
+            catch (Exception ex)
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
@@ -148,34 +131,27 @@ namespace BookshopMVC.Controllers
                     return BadRequest(ModelState);
                 }
 
-                // ✅ Check if genre with same name already exists using helper method
+                // Check if genre with same name already exists using helper method
                 var genreExists = await GenreNameExists(createGenreDto.Name);
                 if (genreExists)
                 {
                     return BadRequest("Genre already exists.");
                 }
 
-                // ✅ Create new Genre entity from DTO
-                var genre = new Genre
-                {
-                    Name = createGenreDto.Name,
-                    Description = createGenreDto.Description,
-                    IsActive = createGenreDto.IsActive,
-                    DisplayOrder = createGenreDto.DisplayOrder
-                    // Note: Genre model doesn't have CreatedDate in MVP schema
-                };
+                // Use AutoMapper to create new Genre entity from DTO
+                var genre = _mapper.Map<Genre>(createGenreDto);
 
                 // Add to context and save
                 _context.Genres.Add(genre);
                 await _context.SaveChangesAsync();
 
-                // ✅ Map to DTO for response
-                var genreDto = MapToGenreDto(genre);
+                // Use AutoMapper to map to DTO for response
+                var genreDto = _mapper.Map<GenreDto>(genre);
 
-                // ✅ Return 201 Created with location header
+                // Return 201 Created with location header
                 return CreatedAtAction(nameof(GetGenre), new { id = genre.Id }, genreDto);
             }
-            catch (Exception ex) // ✅ FIXED: Consistent error handling
+            catch (Exception ex)
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
@@ -197,31 +173,28 @@ namespace BookshopMVC.Controllers
                     return BadRequest(ModelState);
                 }
 
-                // ✅ Find the genre to update
+                // Find the genre to update
                 var genre = await _context.Genres.FindAsync(id);
                 if (genre == null)
                 {
                     return NotFound($"Genre with ID {id} not found.");
                 }
 
-                // ✅ FIXED: Check for name conflicts using helper method
+                // Check for name conflicts using helper method
                 var nameExists = await GenreNameExists(updateGenreDto.Name, id);
                 if (nameExists)
                 {
                     return BadRequest("Genre name already exists.");
                 }
 
-                // ✅ FIXED: Update ALL properties from DTO (not just Name)
-                genre.Name = updateGenreDto.Name;
-                genre.Description = updateGenreDto.Description;
-                genre.IsActive = updateGenreDto.IsActive;
-                genre.DisplayOrder = updateGenreDto.DisplayOrder;
+                // Use AutoMapper to update properties from DTO
+                _mapper.Map(updateGenreDto, genre);
 
                 // Save changes to database
                 await _context.SaveChangesAsync();
-                return NoContent(); // ✅ FIXED: Return proper IActionResult
+                return NoContent();
             }
-            catch (Exception ex) // ✅ FIXED: Consistent error handling
+            catch (Exception ex)
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
@@ -278,43 +251,18 @@ namespace BookshopMVC.Controllers
         // Checks if a genre name already exists (for create/update validation)
         private async Task<bool> GenreNameExists(string name, int? excludeId = null)
         {
-            // ✅ Query genres where name matches (case-insensitive)
+            // Query genres where name matches (case-insensitive)
             var query = _context.Genres
                 .Where(g => g.Name.ToLower() == name.ToLower());
 
-            // ✅ If excludeId is provided, exclude that genre from search (for updates)
+            // If excludeId is provided, exclude that genre from search (for updates)
             if (excludeId.HasValue)
             {
                 query = query.Where(g => g.Id != excludeId.Value);
             }
 
-            // ✅ Use AnyAsync to check existence
+            // Use AnyAsync to check existence
             return await query.AnyAsync();
-        }
-
-        // Maps Genre entity to GenreDto
-        private GenreDto MapToGenreDto(Genre genre)
-        {
-            // ✅ Create and return new GenreDto with all properties mapped
-            return new GenreDto
-            {
-                Id = genre.Id,
-                Name = genre.Name,
-                Description = genre.Description,
-                IsActive = genre.IsActive,
-                DisplayOrder = genre.DisplayOrder,
-                // ✅ Calculate book count from genre.Books (safe null handling)
-                BookCount = genre.Books?.Count ?? 0,
-                // ✅ Create book summaries if Books are loaded, empty list otherwise
-                Books = genre.Books?.Select(b => new BookSummaryDto
-                {
-                    Id = b.Id,
-                    Title = b.Title,
-                    Price = b.Price,
-                    GenreName = genre.Name,
-                    InStock = b.Stock > 0
-                }).ToList() ?? new List<BookSummaryDto>()
-            };
         }
 
         #endregion

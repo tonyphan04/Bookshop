@@ -461,3 +461,5 @@ C:\Users\hoang\OneDrive\Desktop\Bookshop\BookshopMVC\bin\Debug\net9.0\Swashbuckl
 C:\Users\hoang\OneDrive\Desktop\Bookshop\BookshopMVC\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
 C:\Users\hoang\OneDrive\Desktop\Bookshop\BookshopMVC\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
 C:\Users\hoang\OneDrive\Desktop\Bookshop\BookshopMVC\obj\Debug\net9.0\BookshopMVC.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\hoang\OneDrive\Desktop\Bookshop\BookshopMVC\bin\Debug\net9.0\AutoMapper.dll
+C:\Users\hoang\OneDrive\Desktop\Bookshop\BookshopMVC\bin\Debug\net9.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll

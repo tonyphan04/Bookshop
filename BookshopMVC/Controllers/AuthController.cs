@@ -8,6 +8,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using AutoMapper;
 
 namespace BookshopMVC.Controllers
 {
@@ -17,10 +18,12 @@ namespace BookshopMVC.Controllers
     public class AuthController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public AuthController(ApplicationDbContext context)
+        public AuthController(ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         #region Authentication Operations
@@ -54,19 +57,9 @@ namespace BookshopMVC.Controllers
                 // Hash password
                 var passwordHash = HashPassword(registerDto.Password);
 
-                // Create new user
-                var user = new User
-                {
-                    FirstName = registerDto.FirstName,
-                    LastName = registerDto.LastName,
-                    Email = registerDto.Email.ToLower(),
-                    PasswordHash = passwordHash,
-                    Phone = registerDto.Phone,
-                    Address = registerDto.Address,
-                    Role = UserRole.Customer,
-                    IsActive = true,
-                    RegistrationDate = DateTime.UtcNow
-                };
+                // 🎉 AutoMapper magic - replaces manual user creation!
+                var user = _mapper.Map<User>(registerDto);
+                user.PasswordHash = passwordHash; // Set separately for security
 
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();

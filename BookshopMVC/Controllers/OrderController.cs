@@ -5,6 +5,7 @@ using BookshopMVC.Data;
 using BookshopMVC.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using AutoMapper;
 
 namespace BookshopMVC.Controllers
 {
@@ -14,10 +15,12 @@ namespace BookshopMVC.Controllers
     public class OrderController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public OrderController(ApplicationDbContext context)
+        public OrderController(ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         #region READ Operations

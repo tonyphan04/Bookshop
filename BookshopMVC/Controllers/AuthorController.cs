@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using BookshopMVC.DTOs;
 using BookshopMVC.Data;
 using BookshopMVC.Models;
+using AutoMapper;
+using AutoMapper.QueryableExtensions;
 
 namespace BookshopMVC.Controllers
 {
@@ -12,10 +14,12 @@ namespace BookshopMVC.Controllers
     public class AuthorController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IMapper _mapper;
 
-        public AuthorController(ApplicationDbContext context)
+        public AuthorController(ApplicationDbContext context, IMapper mapper)
         {
             _context = context;
+            _mapper = mapper;
         }
 
         #region READ Operations
@@ -26,21 +30,20 @@ namespace BookshopMVC.Controllers
         {
             try
             {
-                var query = _context.Authors
+                // Use AutoMapper with ProjectTo for efficient database projection
+                var authors = await _context.Authors
                     .OrderBy(a => a.LastName)
                     .ThenBy(a => a.FirstName)
-                    .Select(a => new AuthorDto
-                    {
-                        Id = a.Id,
-                        FirstName = a.FirstName,
-                        LastName = a.LastName,
-                        FullName = a.FullName,
-                        Biography = a.Biography,
-                        CreatedDate = a.CreatedDate,
-                        BookCount = a.AuthorBooks.Count,
-                        Books = new List<BookSummaryDto>() // Empty for list view performance
-                    });
-                return Ok(await query.ToListAsync());
+                    .ProjectTo<AuthorDto>(_mapper.ConfigurationProvider)
+                    .ToListAsync();
+
+                // For list view, we want empty books for performance
+                foreach (var author in authors)
+                {
+                    author.Books = new List<BookSummaryDto>();
+                }
+
+                return Ok(authors);
             }
             catch (Exception e)
             {
@@ -54,36 +57,20 @@ namespace BookshopMVC.Controllers
         {
             try
             {
-                // Single efficient query with includes and projection
-                var authorDto = await _context.Authors
-                    .Where(a => a.Id == id)
+                // Find author with related books
+                var author = await _context.Authors
                     .Include(a => a.AuthorBooks)
                     .ThenInclude(ab => ab.Book)
-                    .Select(a => new AuthorDto
-                    {
-                        Id = a.Id,
-                        FirstName = a.FirstName,
-                        LastName = a.LastName,
-                        FullName = a.FullName,
-                        Biography = a.Biography,
-                        CreatedDate = a.CreatedDate,
-                        BookCount = a.AuthorBooks.Count,
-                        Books = a.AuthorBooks.Select(ab => new BookSummaryDto
-                        {
-                            Id = ab.Book.Id,
-                            Title = ab.Book.Title,
-                            Price = ab.Book.Price,
-                            ImageUrl = ab.Book.ImageUrl,
-                            GenreName = ab.Book.Genre != null ? ab.Book.Genre.Name : null,
-                            InStock = ab.Book.Stock > 0
-                        }).ToList()
-                    })
-                    .FirstOrDefaultAsync();
+                    .ThenInclude(b => b.Genre)
+                    .FirstOrDefaultAsync(a => a.Id == id);
 
-                if (authorDto == null)
+                if (author == null)
                 {
                     return NotFound();
                 }
+
+                // Use AutoMapper to map to DTO
+                var authorDto = _mapper.Map<AuthorDto>(author);
 
                 return Ok(authorDto);
             }
@@ -106,23 +93,21 @@ namespace BookshopMVC.Controllers
 
                 var lowerQuery = query.ToLower();
 
+                // Search authors with AutoMapper projection
                 var results = await _context.Authors
                      .Where(a => a.FirstName.ToLower().Contains(lowerQuery) ||
                                  a.LastName.ToLower().Contains(lowerQuery) ||
                                  (a.Biography != null && a.Biography.ToLower().Contains(lowerQuery)))
                      .OrderBy(a => a.LastName)
-                     .Select(a => new AuthorDto
-                     {
-                         Id = a.Id,
-                         FirstName = a.FirstName,
-                         LastName = a.LastName,
-                         FullName = a.FullName,
-                         Biography = a.Biography,
-                         CreatedDate = a.CreatedDate,
-                         BookCount = a.AuthorBooks.Count,
-                         Books = new List<BookSummaryDto>() // Empty for search results performance
-                     })
+                     .ProjectTo<AuthorDto>(_mapper.ConfigurationProvider)
                      .ToListAsync();
+
+                // For search results, we want empty books for performance
+                foreach (var author in results)
+                {
+                    author.Books = new List<BookSummaryDto>();
+                }
+
                 return Ok(results);
             }
             catch (Exception ex)
@@ -146,29 +131,14 @@ namespace BookshopMVC.Controllers
                     return BadRequest(ModelState);
                 }
 
-                var author = new Author
-                {
-                    FirstName = createAuthorDto.FirstName,
-                    LastName = createAuthorDto.LastName,
-                    Biography = createAuthorDto.Biography,
-                    CreatedDate = DateTime.UtcNow
-                };
+                // Use AutoMapper to create new Author entity from DTO
+                var author = _mapper.Map<Author>(createAuthorDto);
 
                 _context.Authors.Add(author);
                 await _context.SaveChangesAsync();
 
-                // Map to DTO for response
-                var authorDto = new AuthorDto
-                {
-                    Id = author.Id,
-                    FirstName = author.FirstName,
-                    LastName = author.LastName,
-                    FullName = author.FullName,
-                    Biography = author.Biography,
-                    CreatedDate = author.CreatedDate,
-                    BookCount = 0, // New author has no books yet
-                    Books = new List<BookSummaryDto>()
-                };
+                // Use AutoMapper to map to DTO for response
+                var authorDto = _mapper.Map<AuthorDto>(author);
 
                 return CreatedAtAction(nameof(GetAuthor), new { id = author.Id }, authorDto);
             }
@@ -199,10 +169,8 @@ namespace BookshopMVC.Controllers
                     return NotFound();
                 }
 
-                // Update properties
-                author.FirstName = updateAuthorDto.FirstName;
-                author.LastName = updateAuthorDto.LastName;
-                author.Biography = updateAuthorDto.Biography;
+                // Use AutoMapper to update properties from DTO
+                _mapper.Map(updateAuthorDto, author);
 
                 await _context.SaveChangesAsync();
 
@@ -212,8 +180,6 @@ namespace BookshopMVC.Controllers
             {
                 return StatusCode(500, "Internal server error while updating author.");
             }
-
-
         }
 
         #endregion
@@ -263,30 +229,6 @@ namespace BookshopMVC.Controllers
         private async Task<bool> AuthorExists(int id)
         {
             return await _context.Authors.AnyAsync(a => a.Id == id);
-        }
-
-        // Maps Author entity to AuthorDto
-        private AuthorDto MapToAuthorDto(Author author)
-        {
-            return new AuthorDto
-            {
-                Id = author.Id,
-                FirstName = author.FirstName,
-                LastName = author.LastName,
-                FullName = author.FullName,
-                Biography = author.Biography,
-                CreatedDate = author.CreatedDate,
-                BookCount = author.AuthorBooks?.Count ?? 0,
-                Books = author.AuthorBooks?.Select(ab => new BookSummaryDto
-                {
-                    Id = ab.Book.Id,
-                    Title = ab.Book.Title,
-                    Price = ab.Book.Price,
-                    ImageUrl = ab.Book.ImageUrl,
-                    GenreName = ab.Book.Genre?.Name,
-                    InStock = ab.Book.Stock > 0
-                }).ToList() ?? new List<BookSummaryDto>()
-            };
         }
 
         #endregion

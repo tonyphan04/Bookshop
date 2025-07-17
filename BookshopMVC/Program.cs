@@ -88,6 +88,9 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// Add AutoMapper
+builder.Services.AddAutoMapper(typeof(Program));
+
 // builder.Services.AddControllers()
 //     .AddJsonOptions(options =>
 //     {
