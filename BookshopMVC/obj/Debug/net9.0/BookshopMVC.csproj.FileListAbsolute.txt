@@ -456,3 +456,8 @@ C:\Users\hoang\OneDrive\Desktop\Bookshop\BookshopMVC\obj\Debug\net9.0\refint\Boo
 C:\Users\hoang\OneDrive\Desktop\Bookshop\BookshopMVC\obj\Debug\net9.0\BookshopMVC.pdb
 C:\Users\hoang\OneDrive\Desktop\Bookshop\BookshopMVC\obj\Debug\net9.0\BookshopMVC.genruntimeconfig.cache
 C:\Users\hoang\OneDrive\Desktop\Bookshop\BookshopMVC\obj\Debug\net9.0\ref\BookshopMVC.dll
+C:\Users\hoang\OneDrive\Desktop\Bookshop\BookshopMVC\bin\Debug\net9.0\Microsoft.OpenApi.dll
+C:\Users\hoang\OneDrive\Desktop\Bookshop\BookshopMVC\bin\Debug\net9.0\Swashbuckle.AspNetCore.Swagger.dll
+C:\Users\hoang\OneDrive\Desktop\Bookshop\BookshopMVC\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerGen.dll
+C:\Users\hoang\OneDrive\Desktop\Bookshop\BookshopMVC\bin\Debug\net9.0\Swashbuckle.AspNetCore.SwaggerUI.dll
+C:\Users\hoang\OneDrive\Desktop\Bookshop\BookshopMVC\obj\Debug\net9.0\BookshopMVC.MvcApplicationPartsAssemblyInfo.cs

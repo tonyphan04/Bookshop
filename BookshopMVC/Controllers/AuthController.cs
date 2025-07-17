@@ -27,6 +27,8 @@ namespace BookshopMVC.Controllers
 
         // POST: api/Auth/register - Register a new user
         [HttpPost("register")]
+        [ProducesResponseType(typeof(AuthResponseDto), 200)]
+        [ProducesResponseType(typeof(string), 400)]
         public async Task<ActionResult<AuthResponseDto>> Register(RegisterDto registerDto)
         {
             try

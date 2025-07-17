@@ -49,7 +49,7 @@ namespace BookshopMVC.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Authors");
+                    b.ToTable("Authors", (string)null);
 
                     b.HasData(
                         new
@@ -85,7 +85,7 @@ namespace BookshopMVC.Migrations
 
                     b.HasIndex("BookId");
 
-                    b.ToTable("AuthorBooks");
+                    b.ToTable("AuthorBooks", (string)null);
 
                     b.HasData(
                         new
@@ -157,7 +157,7 @@ namespace BookshopMVC.Migrations
 
                     b.HasIndex("GenreId");
 
-                    b.ToTable("Books");
+                    b.ToTable("Books", (string)null);
 
                     b.HasData(
                         new
@@ -217,7 +217,7 @@ namespace BookshopMVC.Migrations
                     b.HasIndex("UserId", "BookId")
                         .IsUnique();
 
-                    b.ToTable("CartItems");
+                    b.ToTable("CartItems", (string)null);
                 });
 
             modelBuilder.Entity("BookshopMVC.Models.Genre", b =>
@@ -245,7 +245,7 @@ namespace BookshopMVC.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Genres");
+                    b.ToTable("Genres", (string)null);
 
                     b.HasData(
                         new
@@ -302,7 +302,7 @@ namespace BookshopMVC.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", (string)null);
                 });
 
             modelBuilder.Entity("BookshopMVC.Models.OrderItem", b =>
@@ -332,7 +332,7 @@ namespace BookshopMVC.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.ToTable("OrderItems");
+                    b.ToTable("OrderItems", (string)null);
                 });
 
             modelBuilder.Entity("BookshopMVC.Models.User", b =>
@@ -381,7 +381,7 @@ namespace BookshopMVC.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
 
                     b.HasData(
                         new

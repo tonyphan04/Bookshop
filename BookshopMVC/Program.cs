@@ -9,6 +9,59 @@ builder.Services.AddControllersWithViews();
 // Add API Controllers support
 builder.Services.AddControllers();
 
+// Add Swagger/OpenAPI services
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Bookshop API",
+        Version = "v1",
+        Description = "A comprehensive API for managing a bookshop with authentication, cart, orders, and book management",
+        Contact = new Microsoft.OpenApi.Models.OpenApiContact
+        {
+            Name = "Bookshop API Support",
+            Email = "support@bookshop.com"
+        }
+    });
+
+    // Add security definition for cookie authentication
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Description = @"Cookie-based authentication. 
+                      Step 1: Use the /api/Auth/register or /api/Auth/login endpoint to get authenticated.
+                      Step 2: The authentication will be stored in cookies automatically.
+                      Step 3: You can then access protected endpoints.",
+        Name = "Authorization",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    });
+
+    // Add security requirement
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+
+    // Enable annotations for better documentation
+    // c.EnableAnnotations();  // Requires Swashbuckle.AspNetCore.Annotations
+
+    // Include XML comments if available (optional)
+    // c.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, "BookshopMVC.xml"), true);
+});
+
 // Add Authentication & Authorization
 builder.Services.AddAuthentication("Cookies")
     .AddCookie("Cookies", options =>
@@ -54,6 +107,16 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+else
+{
+    // Enable Swagger only in development
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Bookshop API v1");
+        c.RoutePrefix = "swagger"; // Available at /swagger
+    });
+}
 
 app.UseHttpsRedirection();
 app.UseRouting();
@@ -71,5 +134,12 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+
+// Seed the database with test data
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await BookshopMVC.Data.DataSeeder.SeedAsync(context);
+}
 
 app.Run();
