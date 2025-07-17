@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Authentication Input Validation Test</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      .test-section {
+        margin: 20px 0;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      .error {
+        color: red;
+      }
+      .success {
+        color: green;
+      }
+      .warning {
+        color: orange;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 10px;
+        border-radius: 3px;
+        overflow-x: auto;
+      }
+      input,
+      button {
+        margin: 5px;
+        padding: 8px;
+      }
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔐 Authentication Input Validation Test</h1>
+
+      <div class="test-section">
+        <h2>Registration Test Cases</h2>
+        <h3>Test 1: Valid Registration</h3>
+        <pre>
+POST /api/Auth/register
+{
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john.doe@example.com",
+    "password": "SecurePass123!",
+    "confirmPassword": "SecurePass123!",
+    "phone": "1234567890"
+}
+            </pre
+        >
+        <p class="success">✅ Expected: Success</p>
+
+        <h3>Test 2: Invalid Email Format</h3>
+        <pre>
+POST /api/Auth/register
+{
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "invalid-email",
+    "password": "SecurePass123!",
+    "confirmPassword": "SecurePass123!"
+}
+            </pre
+        >
+        <p class="error">❌ Expected: "Please enter a valid email address."</p>
+
+        <h3>Test 3: Weak Password</h3>
+        <pre>
+POST /api/Auth/register
+{
+    "firstName": "John",
+    "lastName": "Doe",
+    "email": "john@example.com",
+    "password": "password123",
+    "confirmPassword": "password123"
+}
+            </pre
+        >
+        <p class="error">
+          ❌ Expected: "Password must contain at least one uppercase letter."
+        </p>
+
+        <h3>Test 4: SQL Injection Attempt</h3>
+        <pre>
+POST /api/Auth/register
+{
+    "firstName": "John'; DROP TABLE Users; --",
+    "lastName": "Doe",
+    "email": "john@example.com",
+    "password": "SecurePass123!",
+    "confirmPassword": "SecurePass123!"
+}
+            </pre
+        >
+        <p class="error">
+          ❌ Expected: "Invalid characters detected in input."
+        </p>
+
+        <h3>Test 5: XSS Attempt</h3>
+        <pre>
+POST /api/Auth/register
+{
+    "firstName": "&lt;script&gt;alert('xss')&lt;/script&gt;",
+    "lastName": "Doe",
+    "email": "john@example.com",
+    "password": "SecurePass123!",
+    "confirmPassword": "SecurePass123!"
+}
+            </pre
+        >
+        <p class="error">
+          ❌ Expected: "Invalid characters detected in input."
+        </p>
+      </div>
+
+      <div class="test-section">
+        <h2>Login Test Cases</h2>
+        <h3>Test 1: Valid Login</h3>
+        <pre>
+POST /api/Auth/login
+{
+    "email": "john.doe@example.com",
+    "password": "SecurePass123!"
+}
+            </pre
+        >
+        <p class="success">✅ Expected: Success (if user exists)</p>
+
+        <h3>Test 2: Invalid Email Format</h3>
+        <pre>
+POST /api/Auth/login
+{
+    "email": "invalid-email",
+    "password": "password123"
+}
+            </pre
+        >
+        <p class="error">❌ Expected: "Please enter a valid email address."</p>
+
+        <h3>Test 3: Empty Fields</h3>
+        <pre>
+POST /api/Auth/login
+{
+    "email": "",
+    "password": ""
+}
+            </pre
+        >
+        <p class="error">
+          ❌ Expected: "Email is required and cannot be empty."
+        </p>
+
+        <h3>Test 4: Rate Limiting Test</h3>
+        <p class="warning">
+          ⚠️ Make 5+ failed login attempts from the same IP:
+        </p>
+        <pre>
+POST /api/Auth/login
+{
+    "email": "test@example.com",
+    "password": "wrongpassword"
+}
+            </pre
+        >
+        <p class="error">
+          ❌ Expected after 5 attempts: "Too many failed login attempts. Please
+          try again later."
+        </p>
+      </div>
+
+      <div class="test-section">
+        <h2>📋 New Validation Features Summary</h2>
+        <ul>
+          <li>
+            <strong>Enhanced Input Validation:</strong> Comprehensive checks for
+            all input fields
+          </li>
+          <li>
+            <strong>Strong Password Requirements:</strong> Uppercase, lowercase,
+            numbers, and special characters
+          </li>
+          <li>
+            <strong>SQL Injection Protection:</strong> Detects and blocks common
+            SQL injection patterns
+          </li>
+          <li>
+            <strong>XSS Protection:</strong> Prevents cross-site scripting
+            attempts
+          </li>
+          <li>
+            <strong>Rate Limiting:</strong> Prevents brute force attacks with
+            IP-based lockout
+          </li>
+          <li>
+            <strong>Input Sanitization:</strong> Cleans and normalizes user
+            input
+          </li>
+          <li>
+            <strong>Domain Blocking:</strong> Blocks temporary/disposable email
+            domains
+          </li>
+          <li>
+            <strong>Detailed Error Messages:</strong> Clear, user-friendly error
+            responses
+          </li>
+          <li>
+            <strong>Name Validation:</strong> Proper character validation for
+            names
+          </li>
+          <li>
+            <strong>Phone Number Validation:</strong> Validates and sanitizes
+            phone numbers
+          </li>
+        </ul>
+      </div>
+
+      <div class="test-section">
+        <h2>🔧 How to Test</h2>
+        <ol>
+          <li>Start your application: <code>dotnet run</code></li>
+          <li>Use tools like Postman, curl, or browser developer tools</li>
+          <li>
+            Send POST requests to <code>/api/Auth/register</code> and
+            <code>/api/Auth/login</code>
+          </li>
+          <li>Try the test cases above to see the validation in action</li>
+        </ol>
+      </div>
+    </div>
+  </body>
+</html>

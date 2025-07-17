@@ -36,9 +36,19 @@ namespace BookshopMVC.Controllers
         {
             try
             {
+                // Basic input validation
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest(ModelState);
+                    var errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList();
+
+                    return BadRequest(new AuthResponseDto
+                    {
+                        Success = false,
+                        Message = string.Join("; ", errors)
+                    });
                 }
 
                 // Check if email already exists
@@ -50,7 +60,7 @@ namespace BookshopMVC.Controllers
                     return BadRequest(new AuthResponseDto
                     {
                         Success = false,
-                        Message = "Email already registered."
+                        Message = "Email already registered. Please use a different email or try logging in."
                     });
                 }
 
@@ -77,7 +87,7 @@ namespace BookshopMVC.Controllers
                 return Ok(new AuthResponseDto
                 {
                     Success = true,
-                    Message = "Registration successful.",
+                    Message = "Registration successful. Welcome to our bookshop!",
                     User = userAuth
                 });
             }
@@ -97,9 +107,19 @@ namespace BookshopMVC.Controllers
         {
             try
             {
+                // Basic input validation
                 if (!ModelState.IsValid)
                 {
-                    return BadRequest(ModelState);
+                    var errors = ModelState.Values
+                        .SelectMany(v => v.Errors)
+                        .Select(e => e.ErrorMessage)
+                        .ToList();
+
+                    return BadRequest(new AuthResponseDto
+                    {
+                        Success = false,
+                        Message = string.Join("; ", errors)
+                    });
                 }
 
                 // Find user by email
@@ -111,7 +131,7 @@ namespace BookshopMVC.Controllers
                     return Unauthorized(new AuthResponseDto
                     {
                         Success = false,
-                        Message = "Invalid email or password."
+                        Message = "Invalid email or password. Please check your credentials and try again."
                     });
                 }
 
@@ -120,7 +140,7 @@ namespace BookshopMVC.Controllers
                     return Unauthorized(new AuthResponseDto
                     {
                         Success = false,
-                        Message = "Account is deactivated."
+                        Message = "Account is deactivated. Please contact support for assistance."
                     });
                 }
 
@@ -152,7 +172,7 @@ namespace BookshopMVC.Controllers
                 return Ok(new AuthResponseDto
                 {
                     Success = true,
-                    Message = "Login successful.",
+                    Message = "Login successful. Welcome back!",
                     User = userAuth
                 });
             }
