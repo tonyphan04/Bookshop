@@ -6,10 +6,7 @@ using BookshopMVC.Models;
 
 namespace BookshopMVC.Controllers
 {
-    /// <summary>
-    /// Controller for managing book CRUD operations.
-    /// Handles both MVC views and API endpoints for book management.
-    /// </summary>
+    // Controller for managing book CRUD operations and search functionality
     [Route("api/[controller]")]
     [ApiController]
     public class BookController : ControllerBase
@@ -23,11 +20,7 @@ namespace BookshopMVC.Controllers
 
         #region READ Operations
 
-        /// <summary>
-        /// GET: api/Book
-        /// Retrieves all books as summary DTOs for list displays
-        /// </summary>
-        /// <returns>List of BookSummaryDto</returns>
+        // GET: api/Book - Retrieves all active books with summary information
         [HttpGet]
         public async Task<ActionResult<IEnumerable<BookSummaryDto>>> GetBooks()
         {
@@ -63,12 +56,7 @@ namespace BookshopMVC.Controllers
             }
         }
 
-        /// <summary>
-        /// GET: api/Book/5
-        /// Retrieves a specific book by ID with full details
-        /// </summary>
-        /// <param name="id">Book ID</param>
-        /// <returns>BookDto with complete book information</returns>
+        // GET: api/Book/{id} - Retrieves a specific book by ID with full details
         [HttpGet("{id}")]
         public async Task<ActionResult<BookDto>> GetBook(int id)
         {
@@ -113,12 +101,7 @@ namespace BookshopMVC.Controllers
             }
         }
 
-        /// <summary>
-        /// GET: api/Book/genre/5
-        /// Retrieves books by genre ID
-        /// </summary>
-        /// <param name="genreId">Genre ID</param>
-        /// <returns>List of BookSummaryDto for the specified genre</returns>
+        // GET: api/Book/genre/{genreId} - Retrieves all books in a specific genre
         [HttpGet("genre/{genreId}")]
         public async Task<ActionResult<IEnumerable<BookSummaryDto>>> GetBooksByGenre(int genreId)
         {
@@ -161,12 +144,7 @@ namespace BookshopMVC.Controllers
             }
         }
 
-        /// <summary>
-        /// GET: api/Book/search?query=programming
-        /// Search books by title, author, or description
-        /// </summary>
-        /// <param name="query">Search query string</param>
-        /// <returns>List of BookSummaryDto matching the search</returns>
+        // GET: api/Book/search?query=term - Search books by title, author, or description
         [HttpGet("search")]
         public async Task<ActionResult<IEnumerable<BookSummaryDto>>> SearchBooks([FromQuery] string query)
         {
@@ -219,12 +197,7 @@ namespace BookshopMVC.Controllers
 
         #region CREATE Operations
 
-        /// <summary>
-        /// POST: api/Book
-        /// Creates a new book
-        /// </summary>
-        /// <param name="createBookDto">Book creation data</param>
-        /// <returns>Created BookDto</returns>
+        // POST: api/Book - Creates a new book with validation
         [HttpPost]
         public async Task<ActionResult<BookDto>> CreateBook(CreateBookDto createBookDto)
         {
@@ -300,13 +273,7 @@ namespace BookshopMVC.Controllers
 
         #region UPDATE Operations
 
-        /// <summary>
-        /// PUT: api/Book/5
-        /// Updates an existing book
-        /// </summary>
-        /// <param name="id">Book ID to update</param>
-        /// <param name="updateBookDto">Updated book data</param>
-        /// <returns>NoContent if successful</returns>
+        // PUT: api/Book/{id} - Updates an existing book with full validation
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateBook(int id, UpdateBookDto updateBookDto)
         {
@@ -379,13 +346,7 @@ namespace BookshopMVC.Controllers
             }
         }
 
-        /// <summary>
-        /// PATCH: api/Book/5/stock
-        /// Updates only the stock quantity of a book
-        /// </summary>
-        /// <param name="id">Book ID</param>
-        /// <param name="newStock">New stock quantity</param>
-        /// <returns>NoContent if successful</returns>
+        // PATCH: api/Book/{id}/stock - Updates only the stock quantity of a book
         [HttpPatch("{id}/stock")]
         public async Task<IActionResult> UpdateBookStock(int id, [FromBody] int newStock)
         {
@@ -413,12 +374,7 @@ namespace BookshopMVC.Controllers
             }
         }
 
-        /// <summary>
-        /// PATCH: api/Book/5/status
-        /// Toggles the active status of a book (soft delete)
-        /// </summary>
-        /// <param name="id">Book ID</param>
-        /// <returns>NoContent if successful</returns>
+        // PATCH: api/Book/{id}/status - Toggles the active status of a book (soft delete)
         [HttpPatch("{id}/status")]
         public async Task<IActionResult> ToggleBookStatus(int id)
         {
@@ -445,12 +401,7 @@ namespace BookshopMVC.Controllers
 
         #region DELETE Operations
 
-        /// <summary>
-        /// DELETE: api/Book/5
-        /// Soft deletes a book (sets IsActive = false)
-        /// </summary>
-        /// <param name="id">Book ID to delete</param>
-        /// <returns>NoContent if successful</returns>
+        // DELETE: api/Book/{id} - Soft deletes a book (sets IsActive = false)
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBook(int id)
         {
@@ -484,13 +435,7 @@ namespace BookshopMVC.Controllers
             }
         }
 
-        /// <summary>
-        /// DELETE: api/Book/5/permanent
-        /// Permanently deletes a book and all related data
-        /// WARNING: This is destructive and should be admin-only
-        /// </summary>
-        /// <param name="id">Book ID to permanently delete</param>
-        /// <returns>NoContent if successful</returns>
+        // DELETE: api/Book/{id}/permanent - Permanently deletes a book and all related data (admin-only)
         [HttpDelete("{id}/permanent")]
         public async Task<IActionResult> PermanentDeleteBook(int id)
         {
@@ -540,11 +485,7 @@ namespace BookshopMVC.Controllers
 
         #region Helper Methods
 
-        /// <summary>
-        /// Internal method to get book by ID with all related data
-        /// </summary>
-        /// <param name="id">Book ID</param>
-        /// <returns>BookDto or null if not found</returns>
+        // Internal method to get book by ID with all related data
         private async Task<BookDto?> GetBookByIdInternal(int id)
         {
             var book = await _context.Books
@@ -576,21 +517,13 @@ namespace BookshopMVC.Controllers
             };
         }
 
-        /// <summary>
-        /// Checks if a book exists in the database
-        /// </summary>
-        /// <param name="id">Book ID</param>
-        /// <returns>True if book exists</returns>
+        // Checks if a book exists in the database
         private async Task<bool> BookExists(int id)
         {
             return await _context.Books.AnyAsync(b => b.Id == id);
         }
 
-        /// <summary>
-        /// Validates that all author IDs exist in the database
-        /// </summary>
-        /// <param name="authorIds">List of author IDs to validate</param>
-        /// <returns>True if all authors exist</returns>
+        // Validates that all author IDs exist in the database
         private async Task<bool> ValidateAuthorIds(List<int> authorIds)
         {
             if (!authorIds.Any()) return true;
@@ -602,22 +535,13 @@ namespace BookshopMVC.Controllers
             return existingAuthorCount == authorIds.Count;
         }
 
-        /// <summary>
-        /// Validates that genre ID exists in the database
-        /// </summary>
-        /// <param name="genreId">Genre ID to validate</param>
-        /// <returns>True if genre exists</returns>
+        // Validates that genre ID exists in the database
         private async Task<bool> ValidateGenreId(int genreId)
         {
             return await _context.Genres.AnyAsync(g => g.Id == genreId);
         }
 
-        /// <summary>
-        /// Checks if ISBN13 is already in use by another book
-        /// </summary>
-        /// <param name="isbn13">ISBN13 to check</param>
-        /// <param name="excludeBookId">Book ID to exclude from check (for updates)</param>
-        /// <returns>True if ISBN13 is unique</returns>
+        // Checks if ISBN13 is already in use by another book
         private async Task<bool> IsIsbn13Unique(string isbn13, int? excludeBookId = null)
         {
             var query = _context.Books.Where(b => b.ISBN13 == isbn13);

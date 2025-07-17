@@ -6,10 +6,7 @@ using BookshopMVC.Models;
 
 namespace BookshopMVC.Controllers
 {
-    /// <summary>
-    /// Controller for managing author CRUD operations.
-    /// Handles API endpoints for author management.
-    /// </summary>
+    // Controller for managing author CRUD operations and book relationships
     [Route("api/[controller]")]
     [ApiController]
     public class AuthorController : ControllerBase
@@ -23,20 +20,10 @@ namespace BookshopMVC.Controllers
 
         #region READ Operations
 
-        /// <summary>
-        /// GET: api/Author
-        /// Retrieves all authors
-        /// </summary>
-        /// <returns>List of AuthorDto</returns>
+        // GET: api/Author - Retrieves all authors ordered by name
         [HttpGet]
         public async Task<ActionResult<IEnumerable<AuthorDto>>> GetAuthors()
         {
-            // TODO: Write LINQ to:
-            // 1. Query all authors from _context.Authors
-            // 2. Order by LastName, then FirstName
-            // 3. Map to AuthorDto (use Select)
-            // 4. Return Ok(authors)
-            // 5. Add try-catch with StatusCode(500) for errors
             try
             {
                 var query = _context.Authors

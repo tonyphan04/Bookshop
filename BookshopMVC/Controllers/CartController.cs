@@ -6,10 +6,7 @@ using BookshopMVC.Models;
 
 namespace BookshopMVC.Controllers
 {
-    /// <summary>
-    /// Controller for managing shopping cart operations.
-    /// Handles API endpoints for cart management (add, remove, update quantities, view cart).
-    /// </summary>
+    // Controller for managing shopping cart operations and checkout workflow
     [Route("api/[controller]")]
     [ApiController]
     public class CartController : ControllerBase
@@ -23,23 +20,10 @@ namespace BookshopMVC.Controllers
 
         #region READ Operations
 
-        /// <summary>
-        /// GET: api/Cart/user/5
-        /// Retrieves the cart for a specific user
-        /// </summary>
-        /// <param name="userId">User ID</param>
-        /// <returns>CartDto with all cart items</returns>
+        // GET: api/Cart/user/{userId} - Retrieves the cart for a specific user
         [HttpGet("user/{userId}")]
         public async Task<ActionResult<CartDto>> GetUserCart(int userId)
         {
-            // TODO: Write LINQ to:
-            // 1. Query all cart items for the user from _context.CartItems
-            // 2. Include Book and Book.Genre information
-            // 3. Map to CartDto with CartItemDto list
-            // 4. Calculate total price and total items
-            // 5. Return Ok(cartDto)
-            // 6. Add try-catch with StatusCode(500) for errors
-
             try
             {
                 var cartItems = await _context.CartItems
@@ -76,21 +60,10 @@ namespace BookshopMVC.Controllers
             }
         }
 
-        /// <summary>
-        /// GET: api/Cart/count/user/5
-        /// Gets the count of items in user's cart
-        /// </summary>
-        /// <param name="userId">User ID</param>
-        /// <returns>Number of items in cart</returns>
+        // GET: api/Cart/count/user/{userId} - Gets the count of items in user's cart
         [HttpGet("count/user/{userId}")]
         public async Task<ActionResult<int>> GetCartItemCount(int userId)
         {
-            // TODO: Write LINQ to:
-            // 1. Sum the quantities of all cart items for the user
-            // 2. Use _context.CartItems.Where(c => c.UserId == userId).SumAsync(c => c.Quantity)
-            // 3. Return Ok(count)
-            // 4. Add try-catch with StatusCode(500) for errors
-
             try
             {
                 var sum = await _context.CartItems
@@ -109,25 +82,10 @@ namespace BookshopMVC.Controllers
 
         #region CREATE Operations
 
-        /// <summary>
-        /// POST: api/Cart/add
-        /// Adds an item to the cart or updates quantity if item already exists
-        /// </summary>
-        /// <param name="addToCartDto">Cart item data</param>
-        /// <returns>Updated CartItemDto</returns>
+        // POST: api/Cart/add - Adds an item to the cart or updates quantity if item already exists
         [HttpPost("add")]
         public async Task<ActionResult<CartItemDto>> AddToCart(AddToCartDto addToCartDto)
         {
-            // TODO: Write logic to:
-            // 1. Validate ModelState.IsValid, return BadRequest(ModelState) if invalid
-            // 2. Check if book exists and has sufficient stock
-            // 3. Check if user already has this book in cart
-            // 4. If exists, update quantity (ensure total doesn't exceed stock)
-            // 5. If not exists, create new CartItem
-            // 6. SaveChangesAsync()
-            // 7. Map to CartItemDto and return Ok(cartItemDto)
-            // 8. Add try-catch with StatusCode(500) for errors
-
             try
             {
                 if (!ModelState.IsValid)
@@ -196,25 +154,10 @@ namespace BookshopMVC.Controllers
 
         #region UPDATE Operations
 
-        /// <summary>
-        /// PUT: api/Cart/update
-        /// Updates the quantity of an item in the cart
-        /// </summary>
-        /// <param name="updateCartDto">Updated cart item data</param>
-        /// <returns>Updated CartItemDto</returns>
+        // PUT: api/Cart/update - Updates the quantity of an item in the cart
         [HttpPut("update")]
         public async Task<ActionResult<CartItemDto>> UpdateCartItem(UpdateCartItemDto updateCartDto)
         {
-            // TODO: Write logic to:
-            // 1. Validate ModelState.IsValid, return BadRequest(ModelState) if invalid
-            // 2. Find the cart item by UserId and BookId
-            // 3. Check if cart item exists, return NotFound if not
-            // 4. Check if book has sufficient stock for new quantity
-            // 5. Update the quantity
-            // 6. SaveChangesAsync()
-            // 7. Map to CartItemDto and return Ok(cartItemDto)
-            // 8. Add try-catch with StatusCode(500) for errors
-
             try
             {
                 if (!ModelState.IsValid)
@@ -257,24 +200,10 @@ namespace BookshopMVC.Controllers
 
         #region DELETE Operations
 
-        /// <summary>
-        /// DELETE: api/Cart/remove/user/5/book/10
-        /// Removes a specific item from the cart
-        /// </summary>
-        /// <param name="userId">User ID</param>
-        /// <param name="bookId">Book ID</param>
-        /// <returns>NoContent if successful</returns>
+        // DELETE: api/Cart/remove/user/{userId}/book/{bookId} - Removes a specific item from the cart
         [HttpDelete("remove/user/{userId}/book/{bookId}")]
         public async Task<IActionResult> RemoveFromCart(int userId, int bookId)
         {
-            // TODO: Write logic to:
-            // 1. Find the cart item by UserId and BookId
-            // 2. Check if cart item exists, return NotFound if not
-            // 3. Remove the cart item from _context.CartItems
-            // 4. SaveChangesAsync()
-            // 5. Return NoContent()
-            // 6. Add try-catch with StatusCode(500) for errors
-
             try
             {
                 // Find the specific cart item by UserId and BookId
@@ -296,12 +225,7 @@ namespace BookshopMVC.Controllers
             }
         }
 
-        /// <summary>
-        /// DELETE: api/Cart/clear/user/5
-        /// Clears all items from user's cart
-        /// </summary>
-        /// <param name="userId">User ID</param>
-        /// <returns>NoContent if successful</returns>
+        // DELETE: api/Cart/clear/user/{userId} - Clears all items from user's cart
         [HttpDelete("clear/user/{userId}")]
         public async Task<IActionResult> ClearCart(int userId)
         {
@@ -337,18 +261,9 @@ namespace BookshopMVC.Controllers
 
         #region Helper Methods
 
-        /// <summary>
-        /// Checks if a cart item exists for a user and book
-        /// </summary>
-        /// <param name="userId">User ID</param>
-        /// <param name="bookId">Book ID</param>
-        /// <returns>True if cart item exists</returns>
+        // Checks if a cart item exists for a user and book
         private async Task<bool> CartItemExists(int userId, int bookId)
         {
-            // TODO: Write LINQ to:
-            // 1. Use _context.CartItems.AnyAsync(c => c.UserId == userId && c.BookId == bookId)
-            // 2. Return the result
-
             try
             {
                 var cartItemExist = await _context.CartItems.AnyAsync(c => c.UserId == userId && c.BookId == bookId);
@@ -361,17 +276,9 @@ namespace BookshopMVC.Controllers
             }
         }
 
-        /// <summary>
-        /// Gets available stock for a book
-        /// </summary>
-        /// <param name="bookId">Book ID</param>
-        /// <returns>Available stock quantity</returns>
+        // Gets available stock for a book
         private async Task<int> GetAvailableStock(int bookId)
         {
-            // TODO: Write LINQ to:
-            // 1. Find the book by ID
-            // 2. Return book.Stock or 0 if book not found
-
             try
             {
                 var book = await _context.Books
@@ -390,11 +297,7 @@ namespace BookshopMVC.Controllers
             }
         }
 
-        /// <summary>
-        /// Maps CartItem entity to CartItemDto
-        /// </summary>
-        /// <param name="cartItem">CartItem entity</param>
-        /// <returns>CartItemDto</returns>
+        // Maps CartItem entity to CartItemDto
         private CartItemDto MapToCartItemDto(CartItem cartItem)
         {
             return new CartItemDto
