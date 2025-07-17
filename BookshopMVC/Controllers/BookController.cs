@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using BookshopMVC.DTOs;
 using BookshopMVC.Data;
 using BookshopMVC.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BookshopMVC.Controllers
 {
@@ -197,8 +198,9 @@ namespace BookshopMVC.Controllers
 
         #region CREATE Operations
 
-        // POST: api/Book - Creates a new book with validation
+        // POST: api/Book - Creates a new book with validation (Admin Only)
         [HttpPost]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult<BookDto>> CreateBook(CreateBookDto createBookDto)
         {
             try
@@ -273,8 +275,9 @@ namespace BookshopMVC.Controllers
 
         #region UPDATE Operations
 
-        // PUT: api/Book/{id} - Updates an existing book with full validation
+        // PUT: api/Book/{id} - Updates an existing book with full validation (Admin Only)
         [HttpPut("{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> UpdateBook(int id, UpdateBookDto updateBookDto)
         {
             try
@@ -346,8 +349,9 @@ namespace BookshopMVC.Controllers
             }
         }
 
-        // PATCH: api/Book/{id}/stock - Updates only the stock quantity of a book
+        // PATCH: api/Book/{id}/stock - Updates only the stock quantity of a book (Admin Only)
         [HttpPatch("{id}/stock")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> UpdateBookStock(int id, [FromBody] int newStock)
         {
             try
@@ -374,8 +378,9 @@ namespace BookshopMVC.Controllers
             }
         }
 
-        // PATCH: api/Book/{id}/status - Toggles the active status of a book (soft delete)
+        // PATCH: api/Book/{id}/status - Toggles the active status of a book (Admin Only)
         [HttpPatch("{id}/status")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> ToggleBookStatus(int id)
         {
             try

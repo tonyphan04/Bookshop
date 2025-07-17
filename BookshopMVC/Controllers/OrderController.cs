@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using BookshopMVC.DTOs;
 using BookshopMVC.Data;
 using BookshopMVC.Models;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace BookshopMVC.Controllers
 {
@@ -20,17 +22,29 @@ namespace BookshopMVC.Controllers
 
         #region READ Operations
 
-        // GET: api/Order - Retrieves all orders (admin view)
+        // GET: api/Order - Retrieves all orders (Admin Only - but customers can see their own)
         [HttpGet]
+        [Authorize(Policy = "CustomerOrAdmin")]
         public async Task<ActionResult<IEnumerable<OrderDto>>> GetOrders()
         {
             try
             {
-                // ✅ Query all orders with related data (admin view)
-                var orders = await _context.Orders
+                var currentUserId = GetCurrentUserId();
+                var isAdmin = IsCurrentUserAdmin();
+
+                // Query all orders with related data
+                IQueryable<Order> query = _context.Orders
                     .Include(o => o.User)        // Include customer information
                     .Include(o => o.Items)       // ✅ FIXED: Use correct property name 'Items'
-                        .ThenInclude(oi => oi.Book) // Include book details for each item
+                        .ThenInclude(oi => oi.Book); // Include book details for each item
+
+                // If not admin, filter to only show user's own orders
+                if (!isAdmin)
+                {
+                    query = query.Where(o => o.UserId == currentUserId);
+                }
+
+                var orders = await query
                     .OrderByDescending(o => o.OrderDate) // Newest orders first
                     .Select(o => new OrderDto
                     {
@@ -53,8 +67,9 @@ namespace BookshopMVC.Controllers
             }
         }
 
-        // GET: api/Order/5 - Retrieves a specific order by ID with full details
+        // GET: api/Order/{id} - Retrieves a specific order by ID (Customer can see own, Admin sees all)
         [HttpGet("{id}")]
+        [Authorize(Policy = "CustomerOrAdmin")]
         public async Task<ActionResult<OrderDto>> GetOrder(int id)
         {
             try
@@ -69,6 +84,15 @@ namespace BookshopMVC.Controllers
                 if (order == null)
                 {
                     return NotFound($"Order with ID {id} not found.");
+                }
+
+                // Security check: Users can only access their own orders (unless admin)
+                var currentUserId = GetCurrentUserId();
+                var isAdmin = IsCurrentUserAdmin();
+
+                if (!isAdmin && currentUserId != order.UserId)
+                {
+                    return Forbid("You can only access your own orders.");
                 }
 
                 // ✅ Map to OrderWithItemsDto for detailed view
@@ -101,12 +125,22 @@ namespace BookshopMVC.Controllers
             }
         }
 
-        // GET: api/Order/user/5 - Retrieves all orders for a specific user
+        // GET: api/Order/user/{userId} - Retrieves all orders for a specific user (Customer or Admin)
         [HttpGet("user/{userId}")]
+        [Authorize(Policy = "CustomerOrAdmin")]
         public async Task<ActionResult<IEnumerable<OrderDto>>> GetUserOrders(int userId)
         {
             try
             {
+                // Security check: Users can only access their own orders (unless admin)
+                var currentUserId = GetCurrentUserId();
+                var isAdmin = IsCurrentUserAdmin();
+
+                if (!isAdmin && currentUserId != userId)
+                {
+                    return Forbid("You can only access your own orders.");
+                }
+
                 // ✅ Query orders for specific user with related data
                 var orders = await _context.Orders
                     .Where(o => o.UserId == userId) // Filter by user ID
@@ -135,18 +169,30 @@ namespace BookshopMVC.Controllers
             }
         }
 
-        // GET: api/Order/status/Pending - Retrieves orders by status (admin functionality)
+        // GET: api/Order/status/{status} - Retrieves orders by status (Customer can see their own, Admin sees all)
         [HttpGet("status/{status}")]
+        [Authorize(Policy = "CustomerOrAdmin")]
         public async Task<ActionResult<IEnumerable<OrderDto>>> GetOrdersByStatus(OrderStatus status)
         {
             try
             {
-                // ✅ Query orders by status with related data
-                var orders = await _context.Orders
+                var currentUserId = GetCurrentUserId();
+                var isAdmin = IsCurrentUserAdmin();
+
+                // Query orders by status with related data
+                IQueryable<Order> query = _context.Orders
                     .Where(o => o.Status == status) // Filter by status
                     .Include(o => o.User)           // Include user info
                     .Include(o => o.Items)          // Include order items
-                        .ThenInclude(oi => oi.Book) // Include book details
+                        .ThenInclude(oi => oi.Book); // Include book details
+
+                // If not admin, filter to only show user's own orders
+                if (!isAdmin)
+                {
+                    query = query.Where(o => o.UserId == currentUserId);
+                }
+
+                var orders = await query
                     .OrderByDescending(o => o.OrderDate) // Newest first
                     .Select(o => new OrderDto
                     {
@@ -173,8 +219,9 @@ namespace BookshopMVC.Controllers
 
         #region CREATE Operations
 
-        // POST: api/Order/checkout - Creates an order from user's cart items
+        // POST: api/Order/checkout - Creates an order from user's cart items (Authenticated Users)
         [HttpPost("checkout")]
+        [Authorize(Policy = "CustomerOrAdmin")]
         public async Task<ActionResult<OrderDto>> CheckoutCart(CheckoutDto checkoutDto)
         {
             try
@@ -255,8 +302,9 @@ namespace BookshopMVC.Controllers
 
         #region UPDATE Operations
 
-        // PUT: api/Order/5/status - Updates the status of an order (admin functionality)
+        // PUT: api/Order/{id}/status - Updates the status of an order (Admin Only)
         [HttpPut("{id}/status")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> UpdateOrderStatus(int id, UpdateOrderStatusDto updateStatusDto)
         {
             try
@@ -297,8 +345,9 @@ namespace BookshopMVC.Controllers
 
         #region DELETE Operations
 
-        // DELETE: api/Order/5 - Cancels an order (only if status is Pending)
+        // DELETE: api/Order/{id} - Cancels an order (Customer or Admin - customers can cancel their own orders)
         [HttpDelete("{id}")]
+        [Authorize(Policy = "CustomerOrAdmin")]
         public async Task<IActionResult> CancelOrder(int id)
         {
             try
@@ -312,6 +361,15 @@ namespace BookshopMVC.Controllers
                 if (order == null)
                 {
                     return NotFound($"Order with ID {id} not found.");
+                }
+
+                // Security check: Users can only cancel their own orders (unless admin)
+                var currentUserId = GetCurrentUserId();
+                var isAdmin = IsCurrentUserAdmin();
+
+                if (!isAdmin && currentUserId != order.UserId)
+                {
+                    return Forbid("You can only cancel your own orders.");
                 }
 
                 // ✅ Check if order can be cancelled (only Pending orders can be cancelled)
@@ -387,6 +445,19 @@ namespace BookshopMVC.Controllers
                 CreatedAt = order.CreatedDate,
                 ItemCount = order.Items?.Sum(oi => oi.Quantity) ?? 0
             };
+        }
+
+        // Get current logged-in user ID from claims
+        private int GetCurrentUserId()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return int.TryParse(userIdClaim, out var userId) ? userId : 0;
+        }
+
+        // Check if current user is admin
+        private bool IsCurrentUserAdmin()
+        {
+            return User.IsInRole("Admin");
         }
 
         #endregion

@@ -6,6 +6,31 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+// Add API Controllers support
+builder.Services.AddControllers();
+
+// Add Authentication & Authorization
+builder.Services.AddAuthentication("Cookies")
+    .AddCookie("Cookies", options =>
+    {
+        options.LoginPath = "/api/Auth/login";
+        options.LogoutPath = "/api/Auth/logout";
+        options.AccessDeniedPath = "/api/Auth/access-denied";
+        options.ExpireTimeSpan = TimeSpan.FromHours(24);
+        options.SlidingExpiration = true;
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    // Admin-only policy
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireRole("Admin"));
+
+    // Customer or Admin policy
+    options.AddPolicy("CustomerOrAdmin", policy =>
+        policy.RequireRole("Customer", "Admin"));
+});
+
 // Add Entity Framework
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -33,9 +58,14 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
+// Add Authentication & Authorization middleware
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
+
+// Map API Controllers
+app.MapControllers();
 
 app.MapControllerRoute(
     name: "default",

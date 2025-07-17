@@ -4,6 +4,7 @@ using BookshopMVC.DTOs;
 using BookshopMVC.Data;
 using BookshopMVC.Models;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BookshopMVC.Controllers
 {
@@ -135,8 +136,9 @@ namespace BookshopMVC.Controllers
 
         #region CREATE Operations
 
-        // POST: api/Genre - Creates a new genre
+        // POST: api/Genre - Creates a new genre (Admin Only)
         [HttpPost]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<ActionResult<GenreDto>> CreateGenre(CreateGenreDto createGenreDto)
         {
             try
@@ -183,8 +185,9 @@ namespace BookshopMVC.Controllers
 
         #region UPDATE Operations
 
-        // PUT: api/Genre/5 - Updates an existing genre
+        // PUT: api/Genre/{id} - Updates an existing genre (Admin Only)
         [HttpPut("{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> UpdateGenre(int id, UpdateGenreDto updateGenreDto)
         {
             try
@@ -228,8 +231,9 @@ namespace BookshopMVC.Controllers
 
         #region DELETE Operations
 
-        // DELETE: api/Genre/5 - Deletes a genre (with business rule checks)
+        // DELETE: api/Genre/{id} - Deletes a genre (Admin Only)
         [HttpDelete("{id}")]
+        [Authorize(Policy = "AdminOnly")]
         public async Task<IActionResult> DeleteGenre(int id)
         {
             try
@@ -265,26 +269,13 @@ namespace BookshopMVC.Controllers
 
         #region Helper Methods
 
-        /// <summary>
-        /// Checks if a genre exists in the database
-        /// </summary>
-        /// <param name="id">Genre ID</param>
-        /// <returns>True if genre exists</returns>
+        // Checks if a genre exists in the database
         private async Task<bool> GenreExists(int id)
         {
-            // TODO: Write LINQ to:
-            // 1. Use _context.Genres.AnyAsync(g => g.Id == id)
-            // 2. Return the result
-
             return await _context.Genres.AnyAsync(g => g.Id == id);
         }
 
-        /// <summary>
-        /// Checks if a genre name already exists (for create/update validation)
-        /// </summary>
-        /// <param name="name">Genre name</param>
-        /// <param name="excludeId">Genre ID to exclude from search (for updates)</param>
-        /// <returns>True if name exists</returns>
+        // Checks if a genre name already exists (for create/update validation)
         private async Task<bool> GenreNameExists(string name, int? excludeId = null)
         {
             // ✅ Query genres where name matches (case-insensitive)
@@ -301,11 +292,7 @@ namespace BookshopMVC.Controllers
             return await query.AnyAsync();
         }
 
-        /// <summary>
-        /// Maps Genre entity to GenreDto
-        /// </summary>
-        /// <param name="genre">Genre entity</param>
-        /// <returns>GenreDto</returns>
+        // Maps Genre entity to GenreDto
         private GenreDto MapToGenreDto(Genre genre)
         {
             // ✅ Create and return new GenreDto with all properties mapped

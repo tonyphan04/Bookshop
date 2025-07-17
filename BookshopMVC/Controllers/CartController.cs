@@ -3,12 +3,14 @@ using Microsoft.EntityFrameworkCore;
 using BookshopMVC.DTOs;
 using BookshopMVC.Data;
 using BookshopMVC.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BookshopMVC.Controllers
 {
     // Controller for managing shopping cart operations and checkout workflow
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Policy = "CustomerOrAdmin")] // Require authentication for all cart operations
     public class CartController : ControllerBase
     {
         private readonly ApplicationDbContext _context;

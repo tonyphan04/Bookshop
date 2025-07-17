@@ -48,23 +48,10 @@ namespace BookshopMVC.Controllers
             }
         }
 
-        /// <summary>
-        /// GET: api/Author/5
-        /// Retrieves a specific author by ID with their books
-        /// </summary>
-        /// <param name="id">Author ID</param>
-        /// <returns>AuthorDto with book information</returns>
+        // GET: api/Author/{id} - Retrieves a specific author by ID with their books
         [HttpGet("{id}")]
         public async Task<ActionResult<AuthorDto>> GetAuthor(int id)
         {
-            // TODO: Write LINQ to:
-            // 1. Find author by ID using FirstOrDefaultAsync
-            // 2. Include related AuthorBooks and Books (use Include and ThenInclude)
-            // 3. Check if author == null, return NotFound
-            // 4. Map to AuthorDto with book titles
-            // 5. Return Ok(authorDto)
-            // 6. Add try-catch with StatusCode(500) for errors
-
             try
             {
                 // Single efficient query with includes and projection
@@ -106,25 +93,10 @@ namespace BookshopMVC.Controllers
             }
         }
 
-        /// <summary>
-        /// GET: api/Author/search?query=robert
-        /// Search authors by first name, last name, or biography
-        /// </summary>
-        /// <param name="query">Search query string</param>
-        /// <returns>List of AuthorDto matching the search</returns>
+        // GET: api/Author/search?query=term - Search authors by first name, last name, or biography
         [HttpGet("search")]
         public async Task<ActionResult<IEnumerable<AuthorDto>>> SearchAuthors([FromQuery] string query)
         {
-            // TODO: Write LINQ to:
-            // 1. Validate query is not null/empty, return BadRequest if invalid
-            // 2. Convert query to lowercase for case-insensitive search
-            // 3. Query authors where FirstName, LastName, or Biography contains search term
-            // 4. Use ToLower().Contains() for case-insensitive matching
-            // 5. Order results by LastName
-            // 6. Map to AuthorDto
-            // 7. Return Ok(results)
-            // 8. Add try-catch with StatusCode(500) for errors
-
             try
             {
                 if (string.IsNullOrWhiteSpace(query))
@@ -163,25 +135,10 @@ namespace BookshopMVC.Controllers
 
         #region CREATE Operations
 
-        /// <summary>
-        /// POST: api/Author
-        /// Creates a new author
-        /// </summary>
-        /// <param name="createAuthorDto">Author creation data</param>
-        /// <returns>Created AuthorDto</returns>
+        // POST: api/Author - Creates a new author
         [HttpPost]
         public async Task<ActionResult<AuthorDto>> CreateAuthor(CreateAuthorDto createAuthorDto)
         {
-            // TODO: Write logic to:
-            // 1. Validate ModelState.IsValid, return BadRequest(ModelState) if invalid
-            // 2. Create new Author entity from DTO
-            // 3. Set CreatedDate = DateTime.UtcNow
-            // 4. Add to _context.Authors
-            // 5. SaveChangesAsync()
-            // 6. Map created author to AuthorDto
-            // 7. Return CreatedAtAction(nameof(GetAuthor), new { id = author.Id }, authorDto)
-            // 8. Add try-catch with StatusCode(500) for errors
-
             try
             {
                 if (!ModelState.IsValid)
@@ -225,24 +182,10 @@ namespace BookshopMVC.Controllers
 
         #region UPDATE Operations
 
-        /// <summary>
-        /// PUT: api/Author/5
-        /// Updates an existing author
-        /// </summary>
-        /// <param name="id">Author ID to update</param>
-        /// <param name="updateAuthorDto">Updated author data</param>
-        /// <returns>NoContent if successful</returns>
+        // PUT: api/Author/{id} - Updates an existing author
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAuthor(int id, UpdateAuthorDto updateAuthorDto)
         {
-            // TODO: Write logic to:
-            // 1. Validate ModelState.IsValid, return BadRequest(ModelState) if invalid
-            // 2. Find author by ID using FindAsync
-            // 3. Check if author == null, return NotFound
-            // 4. Update author properties from DTO
-            // 5. SaveChangesAsync()
-            // 6. Return NoContent()
-            // 7. Add try-catch with StatusCode(500) for errors
             try
             {
                 if (!ModelState.IsValid)
@@ -277,25 +220,10 @@ namespace BookshopMVC.Controllers
 
         #region DELETE Operations
 
-        /// <summary>
-        /// DELETE: api/Author/5
-        /// Deletes an author (with business rule checks)
-        /// </summary>
-        /// <param name="id">Author ID to delete</param>
-        /// <returns>NoContent if successful</returns>
+        // DELETE: api/Author/{id} - Deletes an author (with business rule checks)
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAuthor(int id)
         {
-            // TODO: Write logic to:
-            // 1. Find author by ID, include AuthorBooks relationships
-            // 2. Check if author == null, return NotFound
-            // 3. Check if author has any books (AuthorBooks.Any())
-            // 4. If has books, return BadRequest("Cannot delete author with existing books")
-            // 5. Remove all AuthorBooks relationships first
-            // 6. Remove the author
-            // 7. SaveChangesAsync()
-            // 8. Return NoContent()
-            // 9. Add try-catch with StatusCode(500) for errors
             try
             {
                 // Find author with related AuthorBooks
@@ -331,21 +259,13 @@ namespace BookshopMVC.Controllers
 
         #region Helper Methods
 
-        /// <summary>
-        /// Checks if an author exists in the database
-        /// </summary>
-        /// <param name="id">Author ID</param>
-        /// <returns>True if author exists</returns>
+        // Checks if an author exists in the database
         private async Task<bool> AuthorExists(int id)
         {
             return await _context.Authors.AnyAsync(a => a.Id == id);
         }
 
-        /// <summary>
-        /// Maps Author entity to AuthorDto
-        /// </summary>
-        /// <param name="author">Author entity</param>
-        /// <returns>AuthorDto</returns>
+        // Maps Author entity to AuthorDto
         private AuthorDto MapToAuthorDto(Author author)
         {
             return new AuthorDto
