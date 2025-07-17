@@ -30,6 +30,7 @@ namespace BookshopMVC.Models
 
         // Navigation properties
         public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();
+        public ICollection<Payment> Payments { get; set; } = new List<Payment>();
     }
 }
 

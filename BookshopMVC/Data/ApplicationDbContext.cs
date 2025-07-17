@@ -16,13 +16,14 @@ namespace BookshopMVC.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
+        public DbSet<Payment> Payments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
             // Configure relationships
-            
+
             // AuthorBook many-to-many relationship
             modelBuilder.Entity<AuthorBook>()
                 .HasKey(ab => new { ab.AuthorId, ab.BookId });
@@ -76,6 +77,12 @@ namespace BookshopMVC.Data
                 .HasIndex(ci => new { ci.UserId, ci.BookId })
                 .IsUnique();
 
+            // Payment relationships
+            modelBuilder.Entity<Payment>()
+                .HasOne(p => p.Order)
+                .WithMany(o => o.Payments)
+                .HasForeignKey(p => p.OrderId);
+
             // Configure precision for decimal properties
             modelBuilder.Entity<Book>()
                 .Property(b => b.Price)
@@ -89,6 +96,10 @@ namespace BookshopMVC.Data
                 .Property(oi => oi.UnitPrice)
                 .HasPrecision(18, 2);
 
+            modelBuilder.Entity<Payment>()
+                .Property(p => p.Amount)
+                .HasPrecision(18, 2);
+
             // Configure TotalPrice as computed property (not stored in database)
             modelBuilder.Entity<OrderItem>()
                 .Ignore(oi => oi.TotalPrice);
@@ -97,45 +108,45 @@ namespace BookshopMVC.Data
 
             // 📚 Genres
             modelBuilder.Entity<Genre>().HasData(
-                new Genre 
-                { 
-                    Id = 1, 
-                    Name = "Technology", 
+                new Genre
+                {
+                    Id = 1,
+                    Name = "Technology",
                     Description = "Books about programming, software development, and technology",
                     IsActive = true,
-                    DisplayOrder = 1 
+                    DisplayOrder = 1
                 },
-                new Genre 
-                { 
-                    Id = 2, 
-                    Name = "Self-Help", 
+                new Genre
+                {
+                    Id = 2,
+                    Name = "Self-Help",
                     Description = "Books about personal development and productivity",
                     IsActive = true,
-                    DisplayOrder = 2 
+                    DisplayOrder = 2
                 },
-                new Genre 
-                { 
-                    Id = 3, 
-                    Name = "Fiction", 
+                new Genre
+                {
+                    Id = 3,
+                    Name = "Fiction",
                     Description = "Novels and fictional stories",
                     IsActive = true,
-                    DisplayOrder = 3 
+                    DisplayOrder = 3
                 }
             );
 
             // 👤 Authors
             modelBuilder.Entity<Author>().HasData(
-                new Author 
-                { 
-                    Id = 1, 
+                new Author
+                {
+                    Id = 1,
                     FirstName = "Robert C.",
                     LastName = "Martin",
                     Biography = "Software engineer and author, known for Clean Code principles",
                     CreatedDate = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc)
                 },
-                new Author 
-                { 
-                    Id = 2, 
+                new Author
+                {
+                    Id = 2,
                     FirstName = "James",
                     LastName = "Clear",
                     Biography = "Author and speaker focused on habits, decision making, and continuous improvement",

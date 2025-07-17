@@ -1,5 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using BookshopMVC.Data;
+using DotNetEnv;
+
+// Load environment variables from .env file
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -85,11 +89,18 @@ builder.Services.AddAuthorization(options =>
 });
 
 // Add Entity Framework
+var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING") ?? 
+                       builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(connectionString));
 
-// Add AutoMapper
+// Add AutoMapper (needed by other controllers)
 builder.Services.AddAutoMapper(typeof(Program));
+
+// Configure Stripe (optional - you can also do this in the controller)
+var stripeSecretKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY") ?? 
+                      builder.Configuration["Stripe:SecretKey"];
+Stripe.StripeConfiguration.ApiKey = stripeSecretKey;
 
 // builder.Services.AddControllers()
 //     .AddJsonOptions(options =>

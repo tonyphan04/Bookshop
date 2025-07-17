@@ -60,7 +60,7 @@ namespace BookshopMVC.Data
             await context.Authors.AddRangeAsync(authors);
             await context.SaveChangesAsync();
 
-            // Seed Users (Test accounts)
+            // Seed Users (Test accounts with diverse scenarios)
             var users = new List<User>
             {
                 new User
@@ -110,6 +110,42 @@ namespace BookshopMVC.Data
                     Phone = "555-0004",
                     Address = "321 Test Street, Test City, TC 24680",
                     RegistrationDate = DateTime.UtcNow.AddDays(-10)
+                },
+                new User
+                {
+                    FirstName = "Alice",
+                    LastName = "Johnson",
+                    Email = "alice.johnson@email.com",
+                    PasswordHash = HashPassword("Alice123!"),
+                    Role = UserRole.Customer,
+                    IsActive = true,
+                    Phone = "555-0005",
+                    Address = "555 Johnson Boulevard, Johnson City, JC 55555",
+                    RegistrationDate = DateTime.UtcNow.AddDays(-8)
+                },
+                new User
+                {
+                    FirstName = "Bob",
+                    LastName = "Wilson",
+                    Email = "bob.wilson@email.com",
+                    PasswordHash = HashPassword("Bob123!"),
+                    Role = UserRole.Customer,
+                    IsActive = true,
+                    Phone = "555-0006",
+                    Address = "777 Wilson Drive, Wilson Town, WT 77777",
+                    RegistrationDate = DateTime.UtcNow.AddDays(-5)
+                },
+                new User
+                {
+                    FirstName = "Charlie",
+                    LastName = "Brown",
+                    Email = "charlie.brown@email.com",
+                    PasswordHash = HashPassword("Charlie123!"),
+                    Role = UserRole.Customer,
+                    IsActive = true,
+                    Phone = "555-0007",
+                    Address = "888 Brown Street, Brown City, BC 88888",
+                    RegistrationDate = DateTime.UtcNow.AddDays(-3)
                 }
             };
 
@@ -238,6 +274,90 @@ namespace BookshopMVC.Data
                     ISBN13 = "9780134610993",
                     Publisher = "Pearson",
                     CreatedDate = DateTime.UtcNow.AddDays(-15)
+                },
+                new Book
+                {
+                    Title = "The Art of War",
+                    Description = "An ancient Chinese military treatise dating from the 5th century BC.",
+                    Price = 12.99m,
+                    Stock = 40,
+                    GenreId = 5,  // History
+                    ImageUrl = "https://example.com/art-of-war.jpg",
+                    ISBN13 = "9780486425573",
+                    Publisher = "Dover Publications",
+                    CreatedDate = DateTime.UtcNow.AddDays(-10)
+                },
+                new Book
+                {
+                    Title = "Think and Grow Rich",
+                    Description = "Napoleon Hill's classic guide to success and wealth building.",
+                    Price = 14.99m,
+                    Stock = 35,
+                    GenreId = 4,  // Self Help
+                    ImageUrl = "https://example.com/think-grow-rich.jpg",
+                    ISBN13 = "9781585424331",
+                    Publisher = "Jeremy P. Tarcher",
+                    CreatedDate = DateTime.UtcNow.AddDays(-8)
+                },
+                new Book
+                {
+                    Title = "The Lean Startup",
+                    Description = "How Today's Entrepreneurs Use Continuous Innovation to Create Radically Successful Businesses.",
+                    Price = 24.99m,
+                    Stock = 28,
+                    GenreId = 3,  // Business
+                    ImageUrl = "https://example.com/lean-startup.jpg",
+                    ISBN13 = "9780307887894",
+                    Publisher = "Crown Business",
+                    CreatedDate = DateTime.UtcNow.AddDays(-5)
+                },
+                new Book
+                {
+                    Title = "The Lord of the Rings",
+                    Description = "J.R.R. Tolkien's epic fantasy trilogy in one volume.",
+                    Price = 32.99m,
+                    Stock = 25,
+                    GenreId = 6,  // Fantasy
+                    ImageUrl = "https://example.com/lotr.jpg",
+                    ISBN13 = "9780544003415",
+                    Publisher = "Houghton Mifflin Harcourt",
+                    CreatedDate = DateTime.UtcNow.AddDays(-3)
+                },
+                new Book
+                {
+                    Title = "Steve Jobs",
+                    Description = "The exclusive biography of Steve Jobs by Walter Isaacson.",
+                    Price = 18.99m,
+                    Stock = 30,
+                    GenreId = 8,  // Biography
+                    ImageUrl = "https://example.com/steve-jobs.jpg",
+                    ISBN13 = "9781451648539",
+                    Publisher = "Simon & Schuster",
+                    CreatedDate = DateTime.UtcNow.AddDays(-2)
+                },
+                new Book
+                {
+                    Title = "Clean Architecture",
+                    Description = "A Craftsman's Guide to Software Structure and Design.",
+                    Price = 36.99m,
+                    Stock = 20,
+                    GenreId = 1,  // Programming
+                    ImageUrl = "https://example.com/clean-architecture.jpg",
+                    ISBN13 = "9780134494166",
+                    Publisher = "Prentice Hall",
+                    CreatedDate = DateTime.UtcNow.AddDays(-1)
+                },
+                new Book
+                {
+                    Title = "The Hitchhiker's Guide to the Galaxy",
+                    Description = "A comedy science fiction franchise created by Douglas Adams.",
+                    Price = 13.99m,
+                    Stock = 45,
+                    GenreId = 2,  // Science Fiction
+                    ImageUrl = "https://example.com/hitchhikers-guide.jpg",
+                    ISBN13 = "9780345391803",
+                    Publisher = "Del Rey Books",
+                    CreatedDate = DateTime.UtcNow
                 }
             };
 
@@ -259,13 +379,20 @@ namespace BookshopMVC.Data
                 new AuthorBook { AuthorId = 8, BookId = 8 }, // Gang of Four - Design Patterns
                 new AuthorBook { AuthorId = 4, BookId = 9 }, // Kathy Sierra - Head First Java
                 new AuthorBook { AuthorId = 3, BookId = 9 }, // Eric Freeman - Head First Java
-                new AuthorBook { AuthorId = 7, BookId = 10 }  // Dave Thomas - AI Modern Approach (placeholder)
+                new AuthorBook { AuthorId = 7, BookId = 10 }, // Dave Thomas - AI Modern Approach (placeholder)
+                new AuthorBook { AuthorId = 9, BookId = 11 }, // Frank Herbert - The Art of War (placeholder)
+                new AuthorBook { AuthorId = 10, BookId = 12 }, // Isaac Asimov - Think and Grow Rich (placeholder)
+                new AuthorBook { AuthorId = 5, BookId = 13 }, // Steve McConnell - The Lean Startup (placeholder)
+                new AuthorBook { AuthorId = 6, BookId = 14 }, // Andy Hunt - The Lord of the Rings (placeholder)
+                new AuthorBook { AuthorId = 7, BookId = 15 }, // Dave Thomas - Steve Jobs (placeholder)
+                new AuthorBook { AuthorId = 1, BookId = 16 }, // Robert Martin - Clean Architecture
+                new AuthorBook { AuthorId = 2, BookId = 17 } // Martin Fowler - Hitchhiker's Guide (placeholder)
             };
 
             await context.AuthorBooks.AddRangeAsync(authorBooks);
             await context.SaveChangesAsync();
 
-            // Seed some sample cart items for test users
+            // Seed more comprehensive cart items for different users
             var cartItems = new List<CartItem>
             {
                 new CartItem
@@ -288,23 +415,46 @@ namespace BookshopMVC.Data
                     BookId = 3, // Head First Design Patterns
                     Quantity = 1,
                     AddedDate = DateTime.UtcNow.AddHours(-12)
+                },
+                new CartItem
+                {
+                    UserId = 5, // Alice Johnson
+                    BookId = 11, // The Art of War
+                    Quantity = 1,
+                    AddedDate = DateTime.UtcNow.AddHours(-6)
+                },
+                new CartItem
+                {
+                    UserId = 5, // Alice Johnson
+                    BookId = 12, // Think and Grow Rich
+                    Quantity = 2,
+                    AddedDate = DateTime.UtcNow.AddHours(-4)
+                },
+                new CartItem
+                {
+                    UserId = 6, // Bob Wilson
+                    BookId = 14, // The Lord of the Rings
+                    Quantity = 1,
+                    AddedDate = DateTime.UtcNow.AddHours(-2)
                 }
             };
 
             await context.CartItems.AddRangeAsync(cartItems);
             await context.SaveChangesAsync();
 
-            // Seed sample orders
+            // Seed diverse orders for payment testing - different statuses and amounts
             var orders = new List<Order>
             {
+                // Completed order (already paid)
                 new Order
                 {
                     UserId = 3, // Jane Smith
                     OrderDate = DateTime.UtcNow.AddDays(-5),
-                    TotalPrice = 64.98m, // 2 books total
+                    TotalPrice = 70.98m, // 2 books total
                     Status = OrderStatus.Completed,
                     CreatedDate = DateTime.UtcNow.AddDays(-5)
                 },
+                // Pending order (ready for payment testing)
                 new Order
                 {
                     UserId = 4, // Test User
@@ -312,15 +462,61 @@ namespace BookshopMVC.Data
                     TotalPrice = 42.99m, // 1 book
                     Status = OrderStatus.Pending,
                     CreatedDate = DateTime.UtcNow.AddDays(-2)
+                },
+                // Another pending order (higher amount)
+                new Order
+                {
+                    UserId = 2, // John Customer
+                    OrderDate = DateTime.UtcNow.AddDays(-1),
+                    TotalPrice = 127.97m, // 3 books
+                    Status = OrderStatus.Pending,
+                    CreatedDate = DateTime.UtcNow.AddDays(-1)
+                },
+                // Small order (low amount for testing)
+                new Order
+                {
+                    UserId = 5, // Alice Johnson
+                    OrderDate = DateTime.UtcNow.AddHours(-12),
+                    TotalPrice = 12.99m, // 1 book
+                    Status = OrderStatus.Pending,
+                    CreatedDate = DateTime.UtcNow.AddHours(-12)
+                },
+                // Large order (high amount for testing)
+                new Order
+                {
+                    UserId = 6, // Bob Wilson
+                    OrderDate = DateTime.UtcNow.AddHours(-6),
+                    TotalPrice = 234.95m, // 5 books
+                    Status = OrderStatus.Pending,
+                    CreatedDate = DateTime.UtcNow.AddHours(-6)
+                },
+                // Confirmed order (payment successful)
+                new Order
+                {
+                    UserId = 7, // Charlie Brown
+                    OrderDate = DateTime.UtcNow.AddHours(-3),
+                    TotalPrice = 49.98m, // 2 books
+                    Status = OrderStatus.Confirmed,
+                    CreatedDate = DateTime.UtcNow.AddHours(-3)
+                },
+                // Cancelled order (payment failed/cancelled)
+                new Order
+                {
+                    UserId = 3, // Jane Smith
+                    OrderDate = DateTime.UtcNow.AddHours(-1),
+                    TotalPrice = 89.99m, // 1 expensive book
+                    Status = OrderStatus.Cancelled,
+                    CreatedDate = DateTime.UtcNow.AddHours(-1)
                 }
             };
 
             await context.Orders.AddRangeAsync(orders);
             await context.SaveChangesAsync();
 
-            // Seed order items
+            // Seed order items for all orders
             var orderItems = new List<OrderItem>
             {
+                // Order 1 items (Jane Smith - Completed)
                 new OrderItem
                 {
                     OrderId = 1,
@@ -335,11 +531,107 @@ namespace BookshopMVC.Data
                     UnitPrice = 15.99m,
                     Quantity = 1
                 },
+                
+                // Order 2 items (Test User - Pending)
                 new OrderItem
                 {
                     OrderId = 2,
                     BookId = 1, // Clean Code
                     UnitPrice = 42.99m,
+                    Quantity = 1
+                },
+                
+                // Order 3 items (John Customer - Pending)
+                new OrderItem
+                {
+                    OrderId = 3,
+                    BookId = 3, // Head First Design Patterns
+                    UnitPrice = 49.99m,
+                    Quantity = 1
+                },
+                new OrderItem
+                {
+                    OrderId = 3,
+                    BookId = 5, // Pragmatic Programmer
+                    UnitPrice = 44.99m,
+                    Quantity = 1
+                },
+                new OrderItem
+                {
+                    OrderId = 3,
+                    BookId = 6, // Dune
+                    UnitPrice = 16.99m,
+                    Quantity = 2
+                },
+                
+                // Order 4 items (Alice Johnson - Pending)
+                new OrderItem
+                {
+                    OrderId = 4,
+                    BookId = 11, // The Art of War
+                    UnitPrice = 12.99m,
+                    Quantity = 1
+                },
+                
+                // Order 5 items (Bob Wilson - Pending)
+                new OrderItem
+                {
+                    OrderId = 5,
+                    BookId = 10, // AI Modern Approach
+                    UnitPrice = 89.99m,
+                    Quantity = 1
+                },
+                new OrderItem
+                {
+                    OrderId = 5,
+                    BookId = 13, // The Lean Startup
+                    UnitPrice = 24.99m,
+                    Quantity = 1
+                },
+                new OrderItem
+                {
+                    OrderId = 5,
+                    BookId = 14, // The Lord of the Rings
+                    UnitPrice = 32.99m,
+                    Quantity = 1
+                },
+                new OrderItem
+                {
+                    OrderId = 5,
+                    BookId = 15, // Steve Jobs
+                    UnitPrice = 18.99m,
+                    Quantity = 2
+                },
+                new OrderItem
+                {
+                    OrderId = 5,
+                    BookId = 17, // Hitchhiker's Guide
+                    UnitPrice = 13.99m,
+                    Quantity = 5
+                },
+                
+                // Order 6 items (Charlie Brown - Confirmed)
+                new OrderItem
+                {
+                    OrderId = 6,
+                    BookId = 12, // Think and Grow Rich
+                    UnitPrice = 14.99m,
+                    Quantity = 1
+                },
+                new OrderItem
+                {
+                    OrderId = 6,
+                    BookId = 16, // Clean Architecture
+                    UnitPrice = 36.99m,
+                    Quantity = 1
+                },
+                
+                // Order 7 items (Jane Smith - Processing)
+                new OrderItem
+                {
+                    OrderId = 7,
+                    BookId = 10, // AI Modern Approach
+                    UnitPrice = 89.99m,
                     Quantity = 1
                 }
             };
@@ -347,17 +639,40 @@ namespace BookshopMVC.Data
             await context.OrderItems.AddRangeAsync(orderItems);
             await context.SaveChangesAsync();
 
-            Console.WriteLine("✅ Database seeded successfully with test data!");
-            Console.WriteLine("📧 Test Accounts Created:");
-            Console.WriteLine("   Admin: admin@bookshop.com / Admin123!");
-            Console.WriteLine("   Customer: customer@bookshop.com / Customer123!");
-            Console.WriteLine("   Jane: jane.smith@email.com / Password123!");
-            Console.WriteLine("   Test: test@bookshop.com / Test123!");
-            Console.WriteLine($"📚 {books.Count} books added");
-            Console.WriteLine($"👥 {authors.Count} authors added");
-            Console.WriteLine($"🏷️ {genres.Count} genres added");
-            Console.WriteLine($"🛒 {cartItems.Count} cart items added");
-            Console.WriteLine($"📦 {orders.Count} orders added");
+            Console.WriteLine("✅ Database seeded successfully with comprehensive test data!");
+            Console.WriteLine("\n📧 Test Accounts Created:");
+            Console.WriteLine("   👨‍💼 Admin: admin@bookshop.com / Admin123!");
+            Console.WriteLine("   👤 Customer: customer@bookshop.com / Customer123!");
+            Console.WriteLine("   👩 Jane Smith: jane.smith@email.com / Password123!");
+            Console.WriteLine("   🧪 Test User: test@bookshop.com / Test123!");
+            Console.WriteLine("   👩‍💻 Alice Johnson: alice.johnson@email.com / Alice123!");
+            Console.WriteLine("   👨‍💻 Bob Wilson: bob.wilson@email.com / Bob123!");
+            Console.WriteLine("   👨‍🎓 Charlie Brown: charlie.brown@email.com / Charlie123!");
+            
+            Console.WriteLine($"\n� Data Summary:");
+            Console.WriteLine($"   �📚 {books.Count} books added across {genres.Count} genres");
+            Console.WriteLine($"   👥 {authors.Count} authors added");
+            Console.WriteLine($"   👨‍👩‍👧‍👦 {users.Count} users created");
+            Console.WriteLine($"   🛒 {cartItems.Count} cart items added");
+            Console.WriteLine($"   📦 {orders.Count} orders created");
+            Console.WriteLine($"   📋 {orderItems.Count} order items added");
+            
+            Console.WriteLine($"\n💳 Payment Test Cases Available:");
+            Console.WriteLine($"   ✅ Order #1: Completed ($70.98) - Jane Smith");
+            Console.WriteLine($"   ⏳ Order #2: Pending ($42.99) - Test User");
+            Console.WriteLine($"   ⏳ Order #3: Pending ($127.97) - John Customer");
+            Console.WriteLine($"   ⏳ Order #4: Pending ($12.99) - Alice Johnson");
+            Console.WriteLine($"   ⏳ Order #5: Pending ($234.95) - Bob Wilson");
+            Console.WriteLine($"   ✅ Order #6: Confirmed ($49.98) - Charlie Brown");
+            Console.WriteLine($"   🔄 Order #7: Cancelled ($89.99) - Jane Smith");
+            
+            Console.WriteLine($"\n🧪 Payment Testing URLs:");
+            Console.WriteLine($"   POST /api/Payment/create/2 (Test User - $42.99)");
+            Console.WriteLine($"   POST /api/Payment/create/3 (John Customer - $127.97)");
+            Console.WriteLine($"   POST /api/Payment/create/4 (Alice Johnson - $12.99)");
+            Console.WriteLine($"   POST /api/Payment/create/5 (Bob Wilson - $234.95)");
+            Console.WriteLine($"   GET /api/Payment/status/{{orderId}} for any order");
+            Console.WriteLine($"   POST /api/Payment/complete/{{orderId}} after payment");
         }
     }
 }
