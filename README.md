@@ -9,7 +9,7 @@
 
 A modern, secure, and scalable book management system built with ASP.NET Core MVC. Complete backend API for managing books, authors, genres, customers, shopping carts, and orders with authentication and role-based authorization.
 
-**Live API Demo!** ➡️ `https://localhost:5106/swagger/index.html`
+**Live API Demo!** ➡️ `https://localhost:5106/swagger`
 
 </div>
 
@@ -20,7 +20,7 @@ A modern, secure, and scalable book management system built with ASP.NET Core MV
 - 🏷️ **Genre Classification** - Organize books by categories and genres
 - 🛒 **Shopping Cart System** - Add, update, remove items with persistent storage
 - 📋 **Order Management** - Complete order processing and history tracking
-- 🔐 **JWT Authentication** - Secure login system with role-based access control
+- 🔐 **Cookie Authentication** - Secure login system with role-based access control
 - 📚 **Interactive API Docs** - Swagger/OpenAPI for testing and documentation
 - 🌱 **Database Seeding** - Pre-populated test data for immediate development
 - 📱 **RESTful Design** - Clean API endpoints following REST principles
@@ -30,10 +30,9 @@ A modern, secure, and scalable book management system built with ASP.NET Core MV
 - [ASP.NET Core 9.0](https://dotnet.microsoft.com/apps/aspnet) - Web framework
 - [Entity Framework Core](https://docs.microsoft.com/ef/core/) - Object-relational mapping
 - [SQL Server](https://www.microsoft.com/sql-server) - Database system
-- [JWT Bearer](https://jwt.io/) - Authentication tokens
 - [Swagger/OpenAPI](https://swagger.io/) - API documentation
 - [AutoMapper](https://automapper.org/) - Object mapping
-- [BCrypt.Net](https://github.com/BcryptNet/bcrypt.net) - Password hashing
+- [Cookie Authentication](https://docs.microsoft.com/aspnet/core/security/authentication/cookie) - Authentication system
 
 ## Getting Started
 
@@ -72,7 +71,7 @@ A modern, secure, and scalable book management system built with ASP.NET Core MV
    dotnet run
    ```
 
-🎉 **That's it!** Visit `https://localhost:7123/swagger` for the interactive API documentation.
+🎉 **That's it!** Visit `https://localhost:5106/swagger` for the interactive API documentation.
 
 ## Quick Start
 
@@ -94,18 +93,23 @@ A modern, secure, and scalable book management system built with ASP.NET Core MV
 BookshopMVC/
 ├── Controllers/          # API endpoints
 ├── Models/              # Data models
+├── DTOs/                # Data Transfer Objects
 ├── Data/                # Database context & seeding
+├── Mappings/            # AutoMapper profiles
 ├── Migrations/          # EF Core migrations
+├── Services/            # Business logic services
+├── Attributes/          # Custom attributes
+├── Extensions/          # Extension methods
 └── wwwroot/            # Static files
 ```
 
 ## API Authentication
 
-The API uses JWT tokens for authentication:
+The API uses cookie-based authentication:
 
-1. **Login** with test credentials to get a token
-2. **Add Bearer token** to Authorization header
-3. **Access protected endpoints** with authenticated requests
+1. **Login** with test credentials to get authenticated
+2. **Cookies are set automatically** by the browser
+3. **Access protected endpoints** with cookie-based authentication
 
 **Authorization Levels:**
 
