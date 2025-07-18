@@ -89,7 +89,7 @@ builder.Services.AddAuthorization(options =>
 });
 
 // Add Entity Framework
-var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING") ?? 
+var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING") ??
                        builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
@@ -98,7 +98,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddAutoMapper(typeof(Program));
 
 // Configure Stripe (optional - you can also do this in the controller)
-var stripeSecretKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY") ?? 
+var stripeSecretKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY") ??
                       builder.Configuration["Stripe:SecretKey"];
 Stripe.StripeConfiguration.ApiKey = stripeSecretKey;
 
@@ -149,11 +149,11 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
-// Seed the database with test data
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await BookshopMVC.Data.DataSeeder.SeedAsync(context);
-}
+// Seed the database with test data (commented out - using manual SQL script instead)
+// using (var scope = app.Services.CreateScope())
+// {
+//     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+//     await BookshopMVC.Data.DataSeeder.SeedAsync(context);
+// }
 
 app.Run();

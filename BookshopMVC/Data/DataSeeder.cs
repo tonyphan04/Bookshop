@@ -9,8 +9,8 @@ namespace BookshopMVC.Data
     {
         public static async Task SeedAsync(ApplicationDbContext context)
         {
-            // Ensure database is created
-            await context.Database.EnsureCreatedAsync();
+            // Apply pending migrations
+            await context.Database.MigrateAsync();
 
             // Check if data already exists
             if (await context.Users.AnyAsync() || await context.Books.AnyAsync())
@@ -648,7 +648,7 @@ namespace BookshopMVC.Data
             Console.WriteLine("   👩‍💻 Alice Johnson: alice.johnson@email.com / Alice123!");
             Console.WriteLine("   👨‍💻 Bob Wilson: bob.wilson@email.com / Bob123!");
             Console.WriteLine("   👨‍🎓 Charlie Brown: charlie.brown@email.com / Charlie123!");
-            
+
             Console.WriteLine($"\n� Data Summary:");
             Console.WriteLine($"   �📚 {books.Count} books added across {genres.Count} genres");
             Console.WriteLine($"   👥 {authors.Count} authors added");
@@ -656,7 +656,7 @@ namespace BookshopMVC.Data
             Console.WriteLine($"   🛒 {cartItems.Count} cart items added");
             Console.WriteLine($"   📦 {orders.Count} orders created");
             Console.WriteLine($"   📋 {orderItems.Count} order items added");
-            
+
             Console.WriteLine($"\n💳 Payment Test Cases Available:");
             Console.WriteLine($"   ✅ Order #1: Completed ($70.98) - Jane Smith");
             Console.WriteLine($"   ⏳ Order #2: Pending ($42.99) - Test User");
@@ -665,7 +665,7 @@ namespace BookshopMVC.Data
             Console.WriteLine($"   ⏳ Order #5: Pending ($234.95) - Bob Wilson");
             Console.WriteLine($"   ✅ Order #6: Confirmed ($49.98) - Charlie Brown");
             Console.WriteLine($"   🔄 Order #7: Cancelled ($89.99) - Jane Smith");
-            
+
             Console.WriteLine($"\n🧪 Payment Testing URLs:");
             Console.WriteLine($"   POST /api/Payment/create/2 (Test User - $42.99)");
             Console.WriteLine($"   POST /api/Payment/create/3 (John Customer - $127.97)");
