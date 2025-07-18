@@ -36,7 +36,7 @@ namespace BookshopMVC.Controllers
         {
             try
             {
-                // Basic input validation
+                // Step 1: Basic input validation
                 if (!ModelState.IsValid)
                 {
                     var errors = ModelState.Values
@@ -51,7 +51,7 @@ namespace BookshopMVC.Controllers
                     });
                 }
 
-                // Check if email already exists
+                // Step 2: Check if email already exists (prevent duplicates)
                 var existingUser = await _context.Users
                     .FirstOrDefaultAsync(u => u.Email.ToLower() == registerDto.Email.ToLower());
 
@@ -64,7 +64,7 @@ namespace BookshopMVC.Controllers
                     });
                 }
 
-                // Hash password
+                // Step 3: Hash password and create user
                 var passwordHash = HashPassword(registerDto.Password);
 
                 // 🎉 AutoMapper magic - replaces manual user creation!
@@ -74,15 +74,8 @@ namespace BookshopMVC.Controllers
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync();
 
-                // Return success response
-                var userAuth = new UserAuthDto
-                {
-                    Id = user.Id,
-                    FullName = user.FullName,
-                    Email = user.Email,
-                    Role = user.Role,
-                    IsActive = user.IsActive
-                };
+                // Step 4: Return success response (user created but not logged in)
+                var userAuth = _mapper.Map<UserAuthDto>(user);
 
                 return Ok(new AuthResponseDto
                 {
@@ -107,7 +100,7 @@ namespace BookshopMVC.Controllers
         {
             try
             {
-                // Basic input validation
+                // Step 1: Basic input validation
                 if (!ModelState.IsValid)
                 {
                     var errors = ModelState.Values
@@ -122,11 +115,11 @@ namespace BookshopMVC.Controllers
                     });
                 }
 
-                // Find user by email
+                // Step 2: Check if email exists (find user)
                 var user = await _context.Users
                     .FirstOrDefaultAsync(u => u.Email.ToLower() == loginDto.Email.ToLower());
 
-                if (user == null || !VerifyPassword(loginDto.Password, user.PasswordHash))
+                if (user == null)
                 {
                     return Unauthorized(new AuthResponseDto
                     {
@@ -135,6 +128,17 @@ namespace BookshopMVC.Controllers
                     });
                 }
 
+                // Step 3: Check if password matches
+                if (!VerifyPassword(loginDto.Password, user.PasswordHash))
+                {
+                    return Unauthorized(new AuthResponseDto
+                    {
+                        Success = false,
+                        Message = "Invalid email or password. Please check your credentials and try again."
+                    });
+                }
+
+                // Step 4: Check if account is active
                 if (!user.IsActive)
                 {
                     return Unauthorized(new AuthResponseDto
@@ -144,7 +148,7 @@ namespace BookshopMVC.Controllers
                     });
                 }
 
-                // Create claims for authentication
+                // Step 5: Create claims for authentication (assign role)
                 var claims = new List<Claim>
                 {
                     new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -156,18 +160,11 @@ namespace BookshopMVC.Controllers
                 var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
                 var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
 
-                // Sign in the user
+                // Step 6: Sign in the user (complete authentication)
                 await HttpContext.SignInAsync("Cookies", claimsPrincipal);
 
-                // Return success response
-                var userAuth = new UserAuthDto
-                {
-                    Id = user.Id,
-                    FullName = user.FullName,
-                    Email = user.Email,
-                    Role = user.Role,
-                    IsActive = user.IsActive
-                };
+                // Return success response using AutoMapper
+                var userAuth = _mapper.Map<UserAuthDto>(user);
 
                 return Ok(new AuthResponseDto
                 {
@@ -219,23 +216,8 @@ namespace BookshopMVC.Controllers
                     return NotFound($"User with ID {id} not found.");
                 }
 
-                var userDto = new UserDto
-                {
-                    Id = user.Id,
-                    FirstName = user.FirstName,
-                    LastName = user.LastName,
-                    FullName = user.FullName,
-                    Email = user.Email,
-                    Phone = user.Phone,
-                    Address = user.Address,
-                    Role = user.Role,
-                    IsActive = user.IsActive,
-                    RegistrationDate = user.RegistrationDate,
-                    IsCustomer = user.IsCustomer,
-                    IsAdmin = user.IsAdmin,
-                    OrderCount = user.Orders?.Count ?? 0,
-                    TotalSpent = user.Orders?.Sum(o => o.TotalPrice) ?? 0
-                };
+                // 🎉 AutoMapper magic - converts User to UserDto with calculated properties!
+                var userDto = _mapper.Map<UserDto>(user);
 
                 return Ok(userDto);
             }
@@ -271,18 +253,8 @@ namespace BookshopMVC.Controllers
                     return BadRequest("Email already in use by another user.");
                 }
 
-                // Update user properties
-                user.FirstName = updateUserDto.FirstName;
-                user.LastName = updateUserDto.LastName;
-                user.Email = updateUserDto.Email.ToLower();
-                user.Phone = updateUserDto.Phone;
-                user.Address = updateUserDto.Address;
-
-                // Only update role and active status if provided (admin only)
-                if (updateUserDto.Role.HasValue)
-                    user.Role = updateUserDto.Role.Value;
-                if (updateUserDto.IsActive.HasValue)
-                    user.IsActive = updateUserDto.IsActive.Value;
+                // 🎉 AutoMapper magic - updates user properties from DTO!
+                _mapper.Map(updateUserDto, user);
 
                 await _context.SaveChangesAsync();
                 return NoContent();
