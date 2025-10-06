@@ -99,6 +99,7 @@ builder.Services.AddAutoMapper(typeof(Program));
 
 // Application services
 builder.Services.AddScoped<BookshopMVC.Application.Interfaces.IAuthService, BookshopMVC.Application.Services.AuthService>();
+builder.Services.AddScoped<Microsoft.AspNetCore.Identity.IPasswordHasher<BookshopMVC.Models.User>, Microsoft.AspNetCore.Identity.PasswordHasher<BookshopMVC.Models.User>>();
 
 // Configure Stripe (optional - you can also do this in the controller)
 var stripeSecretKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY") ??

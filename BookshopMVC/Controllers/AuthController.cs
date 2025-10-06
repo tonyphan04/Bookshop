@@ -1,14 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using BookshopMVC.DTOs;
-using BookshopMVC.Data;
-using BookshopMVC.Models;
-using System.Security.Cryptography;
-using System.Text;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using AutoMapper;
+using BookshopMVC.Application.Interfaces;
 
 namespace BookshopMVC.Controllers
 {
@@ -17,13 +12,11 @@ namespace BookshopMVC.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IMapper _mapper;
+        private readonly IAuthService _authService;
 
-        public AuthController(ApplicationDbContext context, IMapper mapper)
+        public AuthController(IAuthService authService)
         {
-            _context = context;
-            _mapper = mapper;
+            _authService = authService;
         }
 
         #region Authentication Operations
@@ -31,170 +24,75 @@ namespace BookshopMVC.Controllers
         // POST: api/Auth/register - Register a new user
         [HttpPost("register")]
         [ProducesResponseType(typeof(AuthResponseDto), 200)]
-        [ProducesResponseType(typeof(string), 400)]
-        public async Task<ActionResult<AuthResponseDto>> Register(RegisterDto registerDto)
+        [ProducesResponseType(typeof(ProblemDetails), 400)]
+        [ProducesResponseType(typeof(ProblemDetails), 409)]
+        [ProducesResponseType(typeof(ProblemDetails), 500)]
+        [AllowAnonymous]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<ActionResult<AuthResponseDto>> Register(RegisterDto registerDto, CancellationToken ct)
         {
-            try
+            var result = await _authService.RegisterAsync(registerDto, ct);
+            if (!result.Success)
             {
-                // Step 1: Basic input validation
-                if (!ModelState.IsValid)
+                return result.ErrorCode switch
                 {
-                    var errors = ModelState.Values
-                        .SelectMany(v => v.Errors)
-                        .Select(e => e.ErrorMessage)
-                        .ToList();
-
-                    return BadRequest(new AuthResponseDto
-                    {
-                        Success = false,
-                        Message = string.Join("; ", errors)
-                    });
-                }
-
-                // Step 2: Check if email already exists (prevent duplicates)
-                var existingUser = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Email.ToLower() == registerDto.Email.ToLower());
-
-                if (existingUser != null)
-                {
-                    return BadRequest(new AuthResponseDto
-                    {
-                        Success = false,
-                        Message = "Email already registered. Please use a different email or try logging in."
-                    });
-                }
-
-                // Step 3: Hash password and create user
-                var passwordHash = HashPassword(registerDto.Password);
-
-                // 🎉 AutoMapper magic - replaces manual user creation!
-                var user = _mapper.Map<User>(registerDto);
-                user.PasswordHash = passwordHash; // Set separately for security
-
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
-
-                // Step 4: Return success response (user created but not logged in)
-                var userAuth = _mapper.Map<UserAuthDto>(user);
-
-                return Ok(new AuthResponseDto
-                {
-                    Success = true,
-                    Message = "Registration successful. Welcome to our bookshop!",
-                    User = userAuth
-                });
+                    "EmailExists" => Problem(title: "Email already registered.", statusCode: 409),
+                    _ => Problem(title: "Registration failed.", statusCode: 500)
+                };
             }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new AuthResponseDto
-                {
-                    Success = false,
-                    Message = $"Registration failed: {ex.Message}"
-                });
-            }
+
+            return Ok(new AuthResponseDto { Success = true, Message = "Registration successful. Welcome to our bookshop!", User = result.Data });
         }
 
         // POST: api/Auth/login - User login
         [HttpPost("login")]
-        public async Task<ActionResult<AuthResponseDto>> Login(LoginDto loginDto)
+        [ProducesResponseType(typeof(AuthResponseDto), 200)]
+        [ProducesResponseType(typeof(ProblemDetails), 400)]
+        [ProducesResponseType(typeof(ProblemDetails), 401)]
+        [ProducesResponseType(typeof(ProblemDetails), 423)]
+        [ProducesResponseType(typeof(ProblemDetails), 500)]
+        [AllowAnonymous]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<ActionResult<AuthResponseDto>> Login(LoginDto loginDto, CancellationToken ct)
         {
-            try
+            var result = await _authService.LoginAsync(loginDto, ct);
+            if (!result.Success)
             {
-                // Step 1: Basic input validation
-                if (!ModelState.IsValid)
+                return result.ErrorCode switch
                 {
-                    var errors = ModelState.Values
-                        .SelectMany(v => v.Errors)
-                        .Select(e => e.ErrorMessage)
-                        .ToList();
-
-                    return BadRequest(new AuthResponseDto
-                    {
-                        Success = false,
-                        Message = string.Join("; ", errors)
-                    });
-                }
-
-                // Step 2: Check if email exists (find user)
-                var user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.Email.ToLower() == loginDto.Email.ToLower());
-
-                if (user == null)
-                {
-                    return Unauthorized(new AuthResponseDto
-                    {
-                        Success = false,
-                        Message = "Invalid email or password. Please check your credentials and try again."
-                    });
-                }
-
-                // Step 3: Check if password matches
-                if (!VerifyPassword(loginDto.Password, user.PasswordHash))
-                {
-                    return Unauthorized(new AuthResponseDto
-                    {
-                        Success = false,
-                        Message = "Invalid email or password. Please check your credentials and try again."
-                    });
-                }
-
-                // Step 4: Check if account is active
-                if (!user.IsActive)
-                {
-                    return Unauthorized(new AuthResponseDto
-                    {
-                        Success = false,
-                        Message = "Account is deactivated. Please contact support for assistance."
-                    });
-                }
-
-                // Step 5: Create claims for authentication (assign role)
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Name, user.FullName),
-                    new Claim(ClaimTypes.Email, user.Email),
-                    new Claim(ClaimTypes.Role, user.Role.ToString())
+                    "InvalidCredentials" => Problem(title: "Invalid credentials.", statusCode: 401),
+                    "InactiveUser" => Problem(title: "Account is deactivated.", statusCode: 423),
+                    _ => Problem(title: "Login failed.", statusCode: 500)
                 };
-
-                var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
-                var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
-
-                // Step 6: Sign in the user (complete authentication)
-                await HttpContext.SignInAsync("Cookies", claimsPrincipal);
-
-                // Return success response using AutoMapper
-                var userAuth = _mapper.Map<UserAuthDto>(user);
-
-                return Ok(new AuthResponseDto
-                {
-                    Success = true,
-                    Message = "Login successful. Welcome back!",
-                    User = userAuth
-                });
             }
-            catch (Exception ex)
+
+            // Create claims and sign in
+            var u = result.Data!;
+            var claims = new List<Claim>
             {
-                return StatusCode(500, new AuthResponseDto
-                {
-                    Success = false,
-                    Message = $"Login failed: {ex.Message}"
-                });
-            }
+                new Claim(ClaimTypes.NameIdentifier, u.Id.ToString()),
+                new Claim(ClaimTypes.Name, string.IsNullOrWhiteSpace(u.FullName) ? u.Email : u.FullName),
+                new Claim(ClaimTypes.Email, u.Email),
+                new Claim(ClaimTypes.Role, u.Role.ToString())
+            };
+            var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
+            var claimsPrincipal = new ClaimsPrincipal(claimsIdentity);
+            await HttpContext.SignInAsync("Cookies", claimsPrincipal);
+
+            return Ok(new AuthResponseDto { Success = true, Message = "Login successful. Welcome back!", User = result.Data });
         }
 
         // POST: api/Auth/logout - User logout
         [HttpPost("logout")]
-        public async Task<IActionResult> Logout()
+        [Authorize]
+        [ProducesResponseType(204)]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<IActionResult> Logout(CancellationToken ct)
         {
             // Sign out the user
             await HttpContext.SignOutAsync("Cookies");
 
-            return Ok(new AuthResponseDto
-            {
-                Success = true,
-                Message = "Logout successful."
-            });
+            return NoContent();
         }
 
         #endregion
@@ -202,127 +100,90 @@ namespace BookshopMVC.Controllers
         #region User Management Operations
 
         // GET: api/Auth/profile/{id} - Get user profile
-        [HttpGet("profile/{id}")]
-        public async Task<ActionResult<UserDto>> GetProfile(int id)
+        [HttpGet("profile/me")]
+        [Authorize]
+        [ProducesResponseType(typeof(UserDto), 200)]
+        [ProducesResponseType(typeof(ProblemDetails), 401)]
+        [ProducesResponseType(typeof(ProblemDetails), 404)]
+        [ProducesResponseType(typeof(ProblemDetails), 500)]
+        public async Task<ActionResult<UserDto>> GetProfile(CancellationToken ct)
         {
-            try
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out var userId) || userId <= 0)
             {
-                var user = await _context.Users
-                    .Include(u => u.Orders)
-                    .FirstOrDefaultAsync(u => u.Id == id);
-
-                if (user == null)
-                {
-                    return NotFound($"User with ID {id} not found.");
-                }
-
-                // 🎉 AutoMapper magic - converts User to UserDto with calculated properties!
-                var userDto = _mapper.Map<UserDto>(user);
-
-                return Ok(userDto);
+                return Problem(title: "Unauthorized.", statusCode: 401);
             }
-            catch (Exception ex)
+
+            var result = await _authService.GetProfileAsync(userId, ct);
+            if (!result.Success)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                return result.ErrorCode == "NotFound"
+                    ? Problem(title: "User not found.", statusCode: 404)
+                    : Problem(title: "Internal server error.", statusCode: 500);
             }
+            return Ok(result.Data);
         }
 
         // PUT: api/Auth/profile/{id} - Update user profile
-        [HttpPut("profile/{id}")]
-        public async Task<IActionResult> UpdateProfile(int id, UpdateUserDto updateUserDto)
+        [HttpPut("profile/me")]
+        [Authorize]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(ProblemDetails), 400)]
+        [ProducesResponseType(typeof(ProblemDetails), 401)]
+        [ProducesResponseType(typeof(ProblemDetails), 404)]
+        [ProducesResponseType(typeof(ProblemDetails), 409)]
+        [ProducesResponseType(typeof(ProblemDetails), 500)]
+        public async Task<IActionResult> UpdateProfile(UpdateUserDto updateUserDto, CancellationToken ct)
         {
-            try
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out var userId) || userId <= 0)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var user = await _context.Users.FindAsync(id);
-                if (user == null)
-                {
-                    return NotFound($"User with ID {id} not found.");
-                }
-
-                // Check email uniqueness (excluding current user)
-                var emailExists = await _context.Users
-                    .AnyAsync(u => u.Email.ToLower() == updateUserDto.Email.ToLower() && u.Id != id);
-
-                if (emailExists)
-                {
-                    return BadRequest("Email already in use by another user.");
-                }
-
-                // 🎉 AutoMapper magic - updates user properties from DTO!
-                _mapper.Map(updateUserDto, user);
-
-                await _context.SaveChangesAsync();
-                return NoContent();
+                return Problem(title: "Unauthorized.", statusCode: 401);
             }
-            catch (Exception ex)
+
+            var result = await _authService.UpdateProfileAsync(userId, updateUserDto, ct);
+            if (!result.Success)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                return result.ErrorCode switch
+                {
+                    "EmailExists" => Problem(title: "Email already in use by another user.", statusCode: 409),
+                    "NotFound" => Problem(title: "User not found.", statusCode: 404),
+                    _ => Problem(title: "Internal server error.", statusCode: 500)
+                };
             }
+
+            return NoContent();
         }
 
         // PUT: api/Auth/change-password/{id} - Change user password
-        [HttpPut("change-password/{id}")]
-        public async Task<IActionResult> ChangePassword(int id, ChangePasswordDto changePasswordDto)
+        [HttpPut("change-password")]
+        [Authorize]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(ProblemDetails), 400)]
+        [ProducesResponseType(typeof(ProblemDetails), 401)]
+        [ProducesResponseType(typeof(ProblemDetails), 404)]
+        [ProducesResponseType(typeof(ProblemDetails), 500)]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<IActionResult> ChangePassword(ChangePasswordDto changePasswordDto, CancellationToken ct)
         {
-            try
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out var userId) || userId <= 0)
             {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var user = await _context.Users.FindAsync(id);
-                if (user == null)
-                {
-                    return NotFound($"User with ID {id} not found.");
-                }
-
-                // Verify current password
-                if (!VerifyPassword(changePasswordDto.CurrentPassword, user.PasswordHash))
-                {
-                    return BadRequest("Current password is incorrect.");
-                }
-
-                // Hash new password
-                user.PasswordHash = HashPassword(changePasswordDto.NewPassword);
-                await _context.SaveChangesAsync();
-
-                return NoContent();
+                return Problem(title: "Unauthorized.", statusCode: 401);
             }
-            catch (Exception ex)
+
+            var result = await _authService.ChangePasswordAsync(userId, changePasswordDto, ct);
+            if (!result.Success)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                return result.ErrorCode switch
+                {
+                    "InvalidCredentials" => Problem(title: "Current password is incorrect.", statusCode: 400),
+                    "NotFound" => Problem(title: "User not found.", statusCode: 404),
+                    _ => Problem(title: "Internal server error.", statusCode: 500)
+                };
             }
-        }
 
-        #endregion
-
-        #region Helper Methods
-
-        // Hash password using BCrypt or simple SHA256 for MVP
-        private string HashPassword(string password)
-        {
-            using var sha256 = SHA256.Create();
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password + "BookshopSalt"));
-            return Convert.ToBase64String(hashedBytes);
-        }
-
-        // Verify password against hash
-        private bool VerifyPassword(string password, string hash)
-        {
-            var hashedInput = HashPassword(password);
-            return hashedInput == hash;
-        }
-
-        // Check if user exists
-        private async Task<bool> UserExists(int id)
-        {
-            return await _context.Users.AnyAsync(u => u.Id == id);
+            return NoContent();
         }
 
         #endregion

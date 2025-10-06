@@ -4,6 +4,7 @@ using BookshopMVC.DTOs;
 using BookshopMVC.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Identity;
 using System.Security.Cryptography;
 using System.Text;
 using BookshopMVC.Application.Common;
@@ -16,12 +17,14 @@ namespace BookshopMVC.Application.Services
         private readonly ApplicationDbContext _context;
         private readonly IMapper _mapper;
         private readonly ILogger<AuthService> _logger;
+        private readonly IPasswordHasher<User> _passwordHasher;
 
-        public AuthService(ApplicationDbContext context, IMapper mapper, ILogger<AuthService> logger)
+        public AuthService(ApplicationDbContext context, IMapper mapper, ILogger<AuthService> logger, IPasswordHasher<User> passwordHasher)
         {
             _context = context;
             _mapper = mapper;
             _logger = logger;
+            _passwordHasher = passwordHasher;
         }
 
         public async Task<OperationResult<UserAuthDto>> RegisterAsync(RegisterDto dto, CancellationToken ct)
@@ -29,16 +32,19 @@ namespace BookshopMVC.Application.Services
             try
             {
                 // Normalize email
-                var email = dto.Email.Trim();
+                var normalized = EmailNormalizer.NormalizeEmail(dto.Email);
 
-                var exists = await _context.Users.AnyAsync(u => u.Email.ToLower() == email.ToLower(), ct);
+                var exists = await _context.Users.AnyAsync(u => u.Email.ToLower() == normalized, ct);
                 if (exists)
                 {
                     return OperationResult<UserAuthDto>.Fail("EmailExists", "Email already registered.");
                 }
 
                 var user = _mapper.Map<User>(dto);
-                user.PasswordHash = HashPassword(dto.Password);
+                // Ensure stored email is normalized consistently (trim + lower)
+                user.Email = EmailNormalizer.NormalizeEmail(user.Email);
+                // Hash password using ASP.NET Core Identity hasher
+                user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
 
                 _context.Users.Add(user);
                 await _context.SaveChangesAsync(ct);
@@ -57,9 +63,35 @@ namespace BookshopMVC.Application.Services
         {
             try
             {
-                var email = dto.Email.Trim();
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower(), ct);
-                if (user is null || !VerifyPassword(dto.Password, user.PasswordHash))
+                var normalized = EmailNormalizer.NormalizeEmail(dto.Email);
+                var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalized, ct);
+                if (user is null)
+                {
+                    return OperationResult<UserAuthDto>.Fail("InvalidCredentials", "Invalid email or password.");
+                }
+
+                // First, verify with Identity hasher
+                var verify = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, dto.Password);
+                if (verify == PasswordVerificationResult.Failed)
+                {
+                    // Try legacy SHA256 variants (salted and unsalted) for transition
+                    if (user.PasswordHash == LegacyHashPassword_Salted(dto.Password) ||
+                        user.PasswordHash == LegacyHashPassword_Unsalted(dto.Password))
+                    {
+                        // Upgrade to Identity hash
+                        user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
+                        await _context.SaveChangesAsync(ct);
+                        verify = PasswordVerificationResult.Success;
+                    }
+                }
+                else if (verify == PasswordVerificationResult.SuccessRehashNeeded)
+                {
+                    // Upgrade rehash
+                    user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
+                    await _context.SaveChangesAsync(ct);
+                }
+
+                if (verify == PasswordVerificationResult.Failed)
                 {
                     return OperationResult<UserAuthDto>.Fail("InvalidCredentials", "Invalid email or password.");
                 }
@@ -118,14 +150,17 @@ namespace BookshopMVC.Application.Services
                     return OperationResult.Fail("NotFound", "User not found.");
                 }
 
+                var normalized = EmailNormalizer.NormalizeEmail(dto.Email);
                 var emailExists = await _context.Users
-                    .AnyAsync(u => u.Id != userId && u.Email.ToLower() == dto.Email.ToLower(), ct);
+                    .AnyAsync(u => u.Id != userId && u.Email.ToLower() == normalized, ct);
                 if (emailExists)
                 {
                     return OperationResult.Fail("EmailExists", "Email already in use by another user.");
                 }
 
                 _mapper.Map(dto, user);
+                // Ensure updated email is normalized consistently
+                user.Email = EmailNormalizer.NormalizeEmail(user.Email);
                 await _context.SaveChangesAsync(ct);
                 return OperationResult.Ok();
             }
@@ -146,12 +181,27 @@ namespace BookshopMVC.Application.Services
                     return OperationResult.Fail("NotFound", "User not found.");
                 }
 
-                if (!VerifyPassword(dto.CurrentPassword, user.PasswordHash))
+                // Verify current password using Identity hasher; if it fails, try legacy
+                var pv = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, dto.CurrentPassword);
+                var currentValid = pv != PasswordVerificationResult.Failed;
+                if (!currentValid)
+                {
+                    currentValid = user.PasswordHash == LegacyHashPassword_Salted(dto.CurrentPassword) ||
+                                   user.PasswordHash == LegacyHashPassword_Unsalted(dto.CurrentPassword);
+                    if (currentValid)
+                    {
+                        // Upgrade existing hash before setting new one (optional)
+                        user.PasswordHash = _passwordHasher.HashPassword(user, dto.CurrentPassword);
+                    }
+                }
+
+                if (!currentValid)
                 {
                     return OperationResult.Fail("InvalidCredentials", "Current password is incorrect.");
                 }
 
-                user.PasswordHash = HashPassword(dto.NewPassword);
+                // Set new password hash using Identity hasher
+                user.PasswordHash = _passwordHasher.HashPassword(user, dto.NewPassword);
                 await _context.SaveChangesAsync(ct);
                 return OperationResult.Ok();
             }
@@ -162,18 +212,19 @@ namespace BookshopMVC.Application.Services
             }
         }
 
-        // TEMP: reuse current hashing until Phase 2 introduces IPasswordHasher
-        private string HashPassword(string password)
+        // Legacy SHA256 hashing support for transition (previously used in service and seeder)
+        private static string LegacyHashPassword_Salted(string password)
         {
             using var sha256 = SHA256.Create();
             var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password + "BookshopSalt"));
             return Convert.ToBase64String(hashedBytes);
         }
 
-        private bool VerifyPassword(string password, string hash)
+        private static string LegacyHashPassword_Unsalted(string password)
         {
-            var hashed = HashPassword(password);
-            return hashed == hash;
+            using var sha256 = SHA256.Create();
+            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+            return Convert.ToBase64String(hashedBytes);
         }
     }
 }

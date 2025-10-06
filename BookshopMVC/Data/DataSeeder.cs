@@ -1,13 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using BookshopMVC.Models;
-using System.Security.Cryptography;
-using System.Text;
+using Microsoft.AspNetCore.Identity;
 
 namespace BookshopMVC.Data
 {
     public static class DataSeeder
     {
-        public static async Task SeedAsync(ApplicationDbContext context)
+        public static async Task SeedAsync(ApplicationDbContext context, IPasswordHasher<User> passwordHasher)
         {
             // Apply pending migrations
             await context.Database.MigrateAsync();
@@ -18,13 +17,7 @@ namespace BookshopMVC.Data
                 return; // Database already seeded
             }
 
-            // Helper method to hash passwords
-            string HashPassword(string password)
-            {
-                using var sha256 = SHA256.Create();
-                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return Convert.ToBase64String(hashedBytes);
-            }
+            // Use Identity password hasher for secure seeded passwords
 
             // Seed Genres
             var genres = new List<Genre>
@@ -68,7 +61,7 @@ namespace BookshopMVC.Data
                     FirstName = "Admin",
                     LastName = "User",
                     Email = "admin@bookshop.com",
-                    PasswordHash = HashPassword("Admin123!"),
+                    PasswordHash = passwordHasher.HashPassword(null!, "Admin123!"),
                     Role = UserRole.Admin,
                     IsActive = true,
                     Phone = "555-0001",
@@ -80,7 +73,7 @@ namespace BookshopMVC.Data
                     FirstName = "John",
                     LastName = "Customer",
                     Email = "customer@bookshop.com",
-                    PasswordHash = HashPassword("Customer123!"),
+                    PasswordHash = passwordHasher.HashPassword(null!, "Customer123!"),
                     Role = UserRole.Customer,
                     IsActive = true,
                     Phone = "555-0002",
@@ -92,7 +85,7 @@ namespace BookshopMVC.Data
                     FirstName = "Jane",
                     LastName = "Smith",
                     Email = "jane.smith@email.com",
-                    PasswordHash = HashPassword("Password123!"),
+                    PasswordHash = passwordHasher.HashPassword(null!, "Password123!"),
                     Role = UserRole.Customer,
                     IsActive = true,
                     Phone = "555-0003",
@@ -104,7 +97,7 @@ namespace BookshopMVC.Data
                     FirstName = "Test",
                     LastName = "User",
                     Email = "test@bookshop.com",
-                    PasswordHash = HashPassword("Test123!"),
+                    PasswordHash = passwordHasher.HashPassword(null!, "Test123!"),
                     Role = UserRole.Customer,
                     IsActive = true,
                     Phone = "555-0004",
@@ -116,7 +109,7 @@ namespace BookshopMVC.Data
                     FirstName = "Alice",
                     LastName = "Johnson",
                     Email = "alice.johnson@email.com",
-                    PasswordHash = HashPassword("Alice123!"),
+                    PasswordHash = passwordHasher.HashPassword(null!, "Alice123!"),
                     Role = UserRole.Customer,
                     IsActive = true,
                     Phone = "555-0005",
@@ -128,7 +121,7 @@ namespace BookshopMVC.Data
                     FirstName = "Bob",
                     LastName = "Wilson",
                     Email = "bob.wilson@email.com",
-                    PasswordHash = HashPassword("Bob123!"),
+                    PasswordHash = passwordHasher.HashPassword(null!, "Bob123!"),
                     Role = UserRole.Customer,
                     IsActive = true,
                     Phone = "555-0006",
@@ -140,7 +133,7 @@ namespace BookshopMVC.Data
                     FirstName = "Charlie",
                     LastName = "Brown",
                     Email = "charlie.brown@email.com",
-                    PasswordHash = HashPassword("Charlie123!"),
+                    PasswordHash = passwordHasher.HashPassword(null!, "Charlie123!"),
                     Role = UserRole.Customer,
                     IsActive = true,
                     Phone = "555-0007",

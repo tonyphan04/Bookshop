@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "aQaHwjBh5FU=",
+  "dgSpecHash": "iZEdj8rufLg=",
   "success": true,
-  "projectFilePath": "C:\\Users\\hoang\\OneDrive\\Desktop\\Bookshop\\BookshopMVC\\BookshopMVC.csproj",
+  "projectFilePath": "c:\\Users\\hoang\\OneDrive\\Desktop\\Bookshop\\BookshopMVC\\BookshopMVC.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\hoang\\.nuget\\packages\\automapper\\12.0.1\\automapper.12.0.1.nupkg.sha512",
     "C:\\Users\\hoang\\.nuget\\packages\\automapper.extensions.microsoft.dependencyinjection\\12.0.1\\automapper.extensions.microsoft.dependencyinjection.12.0.1.nupkg.sha512",

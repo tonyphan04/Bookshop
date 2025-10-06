@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\hoang\\OneDrive\\Desktop\\Bookshop\\BookshopMVC\\BookshopMVC.csproj": {}
+    "c:\\Users\\hoang\\OneDrive\\Desktop\\Bookshop\\BookshopMVC\\BookshopMVC.csproj": {}
   },
   "projects": {
-    "C:\\Users\\hoang\\OneDrive\\Desktop\\Bookshop\\BookshopMVC\\BookshopMVC.csproj": {
+    "c:\\Users\\hoang\\OneDrive\\Desktop\\Bookshop\\BookshopMVC\\BookshopMVC.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\hoang\\OneDrive\\Desktop\\Bookshop\\BookshopMVC\\BookshopMVC.csproj",
+        "projectUniqueName": "c:\\Users\\hoang\\OneDrive\\Desktop\\Bookshop\\BookshopMVC\\BookshopMVC.csproj",
         "projectName": "BookshopMVC",
-        "projectPath": "C:\\Users\\hoang\\OneDrive\\Desktop\\Bookshop\\BookshopMVC\\BookshopMVC.csproj",
+        "projectPath": "c:\\Users\\hoang\\OneDrive\\Desktop\\Bookshop\\BookshopMVC\\BookshopMVC.csproj",
         "packagesPath": "C:\\Users\\hoang\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\hoang\\OneDrive\\Desktop\\Bookshop\\BookshopMVC\\obj\\",
+        "outputPath": "c:\\Users\\hoang\\OneDrive\\Desktop\\Bookshop\\BookshopMVC\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\hoang\\AppData\\Roaming\\NuGet\\NuGet.Config"
